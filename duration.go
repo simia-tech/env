@@ -14,7 +14,11 @@ type DurationField struct {
 
 // Duration registers a field of the provided name.
 func Duration(name string, defaultValue time.Duration, opts ...Option) *DurationField {
-	field := &DurationField{name: name, defaultValue: defaultValue, options: newOptions(opts)}
+	field := &DurationField{
+		name:         name,
+		defaultValue: defaultValue,
+		options:      newOptions([]string{"Duration field."}, opts),
+	}
 	fields = append(fields, field)
 	return field
 }
@@ -24,6 +28,11 @@ func (df *DurationField) Name() string {
 	return df.name
 }
 
+// Value returns the field's value.
+func (df *DurationField) Value() string {
+	return df.Get().String()
+}
+
 // DefaultValue returns the field's default value.
 func (df *DurationField) DefaultValue() string {
 	return df.defaultValue.String()
@@ -31,12 +40,12 @@ func (df *DurationField) DefaultValue() string {
 
 // Description returns the field's description.
 func (df *DurationField) Description() string {
-	return df.options.description()
+	return df.options.description(df.DefaultValue())
 }
 
 // Get returns the field value or the default value.
 func (df *DurationField) Get() time.Duration {
-	text := os.Getenv(df.name)
+	text := os.Getenv(df.Name())
 	if text == "" {
 		if df.options.required {
 			requiredError(df)

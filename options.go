@@ -12,10 +12,11 @@ type options struct {
 	required      bool
 	allowedValues []string
 	desc          string
+	descSentences []string
 }
 
-func newOptions(opts []Option) *options {
-	o := &options{}
+func newOptions(descSentences []string, opts []Option) *options {
+	o := &options{descSentences: descSentences}
 	for _, opt := range opts {
 		opt(o)
 	}
@@ -55,19 +56,20 @@ func (o *options) isAllowedValue(value string) bool {
 	return false
 }
 
-func (o *options) description() string {
+func (o *options) description(defaultValue string) string {
 	if o == nil {
 		return ""
 	}
 	if o.desc != "" {
 		return o.desc
 	}
-	sentences := []string{}
+	sentences := o.descSentences
 	if o.required {
 		sentences = append(sentences, "Required field.")
 	}
 	if o.allowedValues != nil {
 		sentences = append(sentences, fmt.Sprintf("Allowed values are %s.", joinStringValues(o.allowedValues)))
 	}
+	sentences = append(sentences, "The default value is '"+defaultValue+"'.")
 	return strings.Join(sentences, " ")
 }

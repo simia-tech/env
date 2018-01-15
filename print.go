@@ -11,6 +11,6 @@ func Print(w io.Writer) {
 	for _, field := range fields {
 		fmt.Fprintf(w, "\n")
 		fmt.Fprintf(w, "# %s\n", field.Description())
-		fmt.Fprintf(w, "%s=\"%s\"\n", field.Name(), field.DefaultValue())
+		fmt.Fprintf(w, "%s=\"%s\"\n", field.Name(), field.Value())
 	}
 }

@@ -15,7 +15,7 @@ func TestPrintGeneratedDescription(t *testing.T) {
 	buffer := &bytes.Buffer{}
 	env.Print(buffer)
 
-	assert.Equal(t, "\n# Required field. Allowed values are 'one', 'two' and 'three'.\nTEST_ONE=\"default\"\n", buffer.String())
+	assert.Equal(t, "\n# String field. Required field. Allowed values are 'one', 'two' and 'three'. The default value is 'default'.\nTEST_ONE=\"default\"\n", buffer.String())
 }
 
 func TestPrintCustomDescription(t *testing.T) {

@@ -3,6 +3,7 @@ package env
 // Field implements an environment configuration field.
 type Field interface {
 	Name() string
+	Value() string
 	DefaultValue() string
 	Description() string
 }
