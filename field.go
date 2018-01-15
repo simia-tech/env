@@ -3,6 +3,8 @@ package env
 // Field implements an environment configuration field.
 type Field interface {
 	Name() string
+	DefaultValue() string
+	Description() string
 }
 
 var fields = []Field{}
@@ -14,4 +16,9 @@ func Fields() []string {
 		names = append(names, field.Name())
 	}
 	return names
+}
+
+// Clear clears the field register.
+func Clear() {
+	fields = []Field{}
 }

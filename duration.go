@@ -24,22 +24,32 @@ func (df *DurationField) Name() string {
 	return df.name
 }
 
+// DefaultValue returns the field's default value.
+func (df *DurationField) DefaultValue() string {
+	return df.defaultValue.String()
+}
+
+// Description returns the field's description.
+func (df *DurationField) Description() string {
+	return df.options.description()
+}
+
 // Get returns the field value or the default value.
 func (df *DurationField) Get() time.Duration {
 	text := os.Getenv(df.name)
 	if text == "" {
 		if df.options.required {
-			requiredError(df.name, df.defaultValue.String())
+			requiredError(df)
 		}
 		return df.defaultValue
 	}
-	if !isAllowedValue(df.options, text) {
-		unallowedError(df.name, text, df.options.allowedValues, df.defaultValue.String())
+	if !df.options.isAllowedValue(text) {
+		unallowedError(df, text, df.options.allowedValues)
 		return df.defaultValue
 	}
 	value, err := time.ParseDuration(text)
 	if err != nil {
-		parseError("duration", df.name, text, df.defaultValue.String())
+		parseError(df, "duration", text)
 		return df.defaultValue
 	}
 	return value

@@ -1,12 +1,17 @@
 package env
 
+import (
+	"fmt"
+	"strings"
+)
+
 // Option defines an Option that can modify the options struct.
 type Option func(*options)
 
 type options struct {
 	required      bool
 	allowedValues []string
-	description   string
+	desc          string
 }
 
 func newOptions(opts []Option) *options {
@@ -34,18 +39,35 @@ func AllowedValues(values ...string) Option {
 // Description returns an Option that sets the description of the environment field.
 func Description(text string) Option {
 	return func(o *options) {
-		o.description = text
+		o.desc = text
 	}
 }
 
-func isAllowedValue(options *options, value string) bool {
-	if options.allowedValues == nil {
+func (o *options) isAllowedValue(value string) bool {
+	if o == nil || o.allowedValues == nil {
 		return true
 	}
-	for _, allowedValue := range options.allowedValues {
+	for _, allowedValue := range o.allowedValues {
 		if value == allowedValue {
 			return true
 		}
 	}
 	return false
+}
+
+func (o *options) description() string {
+	if o == nil {
+		return ""
+	}
+	if o.desc != "" {
+		return o.desc
+	}
+	sentences := []string{}
+	if o.required {
+		sentences = append(sentences, "Required field.")
+	}
+	if o.allowedValues != nil {
+		sentences = append(sentences, fmt.Sprintf("Allowed values are %s.", joinStringValues(o.allowedValues)))
+	}
+	return strings.Join(sentences, " ")
 }

@@ -21,17 +21,27 @@ func (sf *StringField) Name() string {
 	return sf.name
 }
 
+// DefaultValue returns the field's default value.
+func (sf *StringField) DefaultValue() string {
+	return sf.defaultValue
+}
+
+// Description returns the field's description.
+func (sf *StringField) Description() string {
+	return sf.options.description()
+}
+
 // Get returns the field value or the default value.
 func (sf *StringField) Get() string {
 	value := os.Getenv(sf.name)
 	if value == "" {
 		if sf.options.required {
-			requiredError(sf.name, sf.defaultValue)
+			requiredError(sf)
 		}
 		return sf.defaultValue
 	}
-	if !isAllowedValue(sf.options, value) {
-		unallowedError(sf.name, value, sf.options.allowedValues, sf.defaultValue)
+	if !sf.options.isAllowedValue(value) {
+		unallowedError(sf, value, sf.options.allowedValues)
 		return sf.defaultValue
 	}
 	return value
