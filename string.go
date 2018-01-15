@@ -11,8 +11,7 @@ type StringField struct {
 
 // String registers a field of the provided name.
 func String(name, defaultValue string, opts ...Option) *StringField {
-	options := newOptions(opts)
-	field := &StringField{name: name, defaultValue: defaultValue, options: options}
+	field := &StringField{name: name, defaultValue: defaultValue, options: newOptions(opts)}
 	fields = append(fields, field)
 	return field
 }
@@ -29,6 +28,10 @@ func (sf *StringField) Get() string {
 		if sf.options.required {
 			requiredError(sf.name, sf.defaultValue)
 		}
+		return sf.defaultValue
+	}
+	if !isAllowedValue(sf.options, value) {
+		unallowedError(sf.name, value, sf.options.allowedValues, sf.defaultValue)
 		return sf.defaultValue
 	}
 	return value

@@ -33,6 +33,10 @@ func (df *DurationField) Get() time.Duration {
 		}
 		return df.defaultValue
 	}
+	if !isAllowedValue(df.options, text) {
+		unallowedError(df.name, text, df.options.allowedValues, df.defaultValue.String())
+		return df.defaultValue
+	}
 	value, err := time.ParseDuration(text)
 	if err != nil {
 		parseError("duration", df.name, text, df.defaultValue.String())
