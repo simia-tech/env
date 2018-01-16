@@ -31,11 +31,11 @@ func TestDuration(t *testing.T) {
 	}{
 		{"Value", optional, "1s", time.Second, nil},
 		{"DefaultValue", optional, "", time.Minute, nil},
-		{"ParseError", optional, "abc", time.Minute, fmt.Errorf("duration field OPTIONAL_FIELD could not be parsed. using default value '1m0s'")},
+		{"ParseError", optional, "abc", time.Minute, fmt.Errorf("duration field OPTIONAL_FIELD could not be parsed - using default value '1m0s'")},
 		{"RequiredAndSet", required, "1s", time.Second, nil},
-		{"RequiredNotSet", required, "", time.Minute, fmt.Errorf("required field REQUIRED_FIELD is not set. using default value '1m0s'")},
+		{"RequiredNotSet", required, "", time.Minute, fmt.Errorf("required field REQUIRED_FIELD is not set - using default value '1m0s'")},
 		{"AllowedValue", allowed, "1s", time.Second, nil},
-		{"UnallowedValue", allowed, "1ms", time.Minute, fmt.Errorf("field ALLOWED_FIELD does not allow value '1ms' (allowed values are '1s', '1m' and '1h'). using default value '1m0s'")},
+		{"UnallowedValue", allowed, "1ms", time.Minute, fmt.Errorf("field ALLOWED_FIELD does not allow value '1ms' (allowed values are '1s', '1m' and '1h') - using default value '1m0s'")},
 	}
 
 	for _, tc := range tcs {

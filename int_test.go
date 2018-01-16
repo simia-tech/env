@@ -30,11 +30,11 @@ func TestInt(t *testing.T) {
 	}{
 		{"Value", optional, "2", 2, nil},
 		{"DefaultValue", optional, "", 1, nil},
-		{"ParseError", optional, "abc", 1, fmt.Errorf("int field OPTIONAL_FIELD could not be parsed. using default value '1'")},
+		{"ParseError", optional, "abc", 1, fmt.Errorf("int field OPTIONAL_FIELD could not be parsed - using default value '1'")},
 		{"RequiredAndSet", required, "2", 2, nil},
-		{"RequiredNotSet", required, "", 1, fmt.Errorf("required field REQUIRED_FIELD is not set. using default value '1'")},
+		{"RequiredNotSet", required, "", 1, fmt.Errorf("required field REQUIRED_FIELD is not set - using default value '1'")},
 		{"AllowedValue", allowed, "2", 2, nil},
-		{"UnallowedValue", allowed, "4", 1, fmt.Errorf("field ALLOWED_FIELD does not allow value '4' (allowed values are '1', '2' and '3'). using default value '1'")},
+		{"UnallowedValue", allowed, "4", 1, fmt.Errorf("field ALLOWED_FIELD does not allow value '4' (allowed values are '1', '2' and '3') - using default value '1'")},
 	}
 
 	for _, tc := range tcs {

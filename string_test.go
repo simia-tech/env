@@ -31,9 +31,9 @@ func TestString(t *testing.T) {
 		{"Value", optional, "def", "def", nil},
 		{"DefaultValue", optional, "", "abc", nil},
 		{"RequiredAndSet", required, "def", "def", nil},
-		{"RequiredNotSet", required, "", "abc", fmt.Errorf("required field REQUIRED_FIELD is not set. using default value 'abc'")},
+		{"RequiredNotSet", required, "", "abc", fmt.Errorf("required field REQUIRED_FIELD is not set - using default value 'abc'")},
 		{"AllowedValue", allowed, "def", "def", nil},
-		{"UnallowedValue", allowed, "ghi", "abc", fmt.Errorf("field ALLOWED_FIELD does not allow value 'ghi' (allowed values are 'abc' and 'def'). using default value 'abc'")},
+		{"UnallowedValue", allowed, "ghi", "abc", fmt.Errorf("field ALLOWED_FIELD does not allow value 'ghi' (allowed values are 'abc' and 'def') - using default value 'abc'")},
 	}
 
 	for _, tc := range tcs {

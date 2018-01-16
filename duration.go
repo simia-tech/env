@@ -58,7 +58,7 @@ func (df *DurationField) Get() time.Duration {
 	}
 	value, err := time.ParseDuration(text)
 	if err != nil {
-		parseError(df, "Duration", text)
+		parseError(df, "duration", text)
 		return df.defaultValue
 	}
 	return value

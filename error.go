@@ -24,21 +24,21 @@ var (
 )
 
 func requiredError(field Field) {
-	ErrorHandler(fmt.Errorf("Required field %s is not set. Using default value '%s'.", field.Name(), field.DefaultValue()))
+	ErrorHandler(fmt.Errorf("required field %s is not set - using default value '%s'", field.Name(), field.DefaultValue()))
 }
 
 func parseError(field Field, kind, value string) {
-	ErrorHandler(fmt.Errorf("%s field %s could not be parsed. Using default value '%s'.", kind, field.Name(), field.DefaultValue()))
+	ErrorHandler(fmt.Errorf("%s field %s could not be parsed - using default value '%s'", kind, field.Name(), field.DefaultValue()))
 }
 
 func unallowedError(field Field, value string, allowedValues []string) {
 	if len(allowedValues) == 1 {
 		ErrorHandler(
-			fmt.Errorf("Field %s does not allow value '%s' (only value '%s' is allowed). Using default value '%s'.",
+			fmt.Errorf("field %s does not allow value '%s' (only value '%s' is allowed) - using default value '%s'",
 				field.Name(), value, allowedValues[0], field.DefaultValue()))
 	} else {
 		ErrorHandler(
-			fmt.Errorf("Field %s does not allow value '%s' (allowed values are %s). Using default value '%s'.",
+			fmt.Errorf("field %s does not allow value '%s' (allowed values are %s) - using default value '%s'",
 				field.Name(), value, joinStringValues(allowedValues), field.DefaultValue()))
 	}
 }
