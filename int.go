@@ -58,7 +58,7 @@ func (i *IntField) Get() int {
 	}
 	value, err := strconv.Atoi(text)
 	if err != nil {
-		parseError(i, "int", text)
+		parseError(i, "Int", text)
 		return i.defaultValue
 	}
 	return value
