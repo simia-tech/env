@@ -4,11 +4,22 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"log"
+	"os"
 )
 
-// PrintFlag returns a flag for the environment print.
-func PrintFlag() *string {
-	return flag.String("print", "", "print the environment in the given format. format can be 'short-bash', 'long-bash', 'short-dockerfile' and 'long-dockerfile'")
+var printFlag = flag.String("print", "", "print the environment in the given format. format can be 'short-bash', 'long-bash', 'short-dockerfile' and 'long-dockerfile'")
+
+// EvaluatePrintFlag tests if the print-flag was given at the program start and prints the registered
+// environment fields with thier values to stdout using the specified format. Afterwards, the program exits
+// with return code 2.
+func EvaluatePrintFlag() {
+	if *printFlag != "" {
+		if err := Print(os.Stdout, *printFlag); err != nil {
+			log.Fatal(err)
+		}
+		os.Exit(2)
+	}
 }
 
 // Print prints the environment in the provided format.
