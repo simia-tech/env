@@ -33,7 +33,7 @@ func Duration(name string, defaultValue time.Duration, opts ...Option) *Duration
 		defaultValue: defaultValue,
 		options:      newOptions([]string{"Duration field."}, opts),
 	}
-	fields = append(fields, field)
+	RegisterField(field)
 	return field
 }
 

@@ -33,7 +33,7 @@ func Int(name string, defaultValue int, opts ...Option) *IntField {
 		defaultValue: defaultValue,
 		options:      newOptions([]string{"Int field."}, opts),
 	}
-	fields = append(fields, field)
+	RegisterField(field)
 	return field
 }
 

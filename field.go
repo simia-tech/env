@@ -24,6 +24,11 @@ type Field interface {
 
 var fields = []Field{}
 
+// RegisterField adds the provided `Field` to the global field-register.
+func RegisterField(field Field) {
+	fields = append(fields, field)
+}
+
 // Fields returns a slice of strings with all registered fields.
 func Fields() []string {
 	names := []string{}

@@ -33,7 +33,7 @@ func Bytes(name string, defaultValue []byte, opts ...Option) *BytesField {
 		defaultValue: defaultValue,
 		options:      newOptions([]string{"Bytes field."}, opts),
 	}
-	fields = append(fields, field)
+	RegisterField(field)
 	return field
 }
 

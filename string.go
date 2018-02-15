@@ -30,7 +30,7 @@ func String(name, defaultValue string, opts ...Option) *StringField {
 		defaultValue: defaultValue,
 		options:      newOptions([]string{"String field."}, opts),
 	}
-	fields = append(fields, field)
+	RegisterField(field)
 	return field
 }
 

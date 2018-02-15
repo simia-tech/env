@@ -3,7 +3,9 @@
 
 [![GoDoc](https://godoc.org/github.com/simia-tech/env?status.svg)](https://godoc.org/github.com/simia-tech/env) [![Build Status](https://travis-ci.org/simia-tech/env.svg?branch=master)](https://travis-ci.org/simia-tech/env)
 
-Golang handling of environment values
+Implements a simple way of handling environment values. Each environment field is simply reflected by a
+variable inside the Go program. Out of the box handlers for the types `bool`, `[]byte`, `time.Duration`,
+`int`, `string` and `[]string` are provided. Other types can be added by using the `RegisterField` function.
 
 ## Example
 

@@ -37,7 +37,7 @@ func Bool(name string, defaultValue bool, opts ...Option) *BoolField {
 		defaultValue: defaultValue,
 		options:      newOptions([]string{"Bool field."}, append(opts, AllowedValues("0", "1", falseValue, trueValue, "no", "yes"))),
 	}
-	fields = append(fields, field)
+	RegisterField(field)
 	return field
 }
 
