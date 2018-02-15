@@ -8,8 +8,8 @@ import (
 )
 
 var (
-	name = env.String("NAME", "simia")
-	age  = env.Int("AGE", 18)
+	name = env.String("NAME", "joe")
+	age  = env.Int("AGE", 24)
 )
 
 func main() {

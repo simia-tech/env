@@ -9,8 +9,8 @@ Golang handling of environment values
 
 ```go
 var (
-	name = env.String("NAME", "simia")
-	age  = env.Int("AGE", 18)
+	name = env.String("NAME", "joe")
+	age  = env.Int("AGE", 24)
 )
 
 func main() {
@@ -20,6 +20,23 @@ func main() {
 
 	fmt.Printf("%s is %d years old\n", name.Get(), age.Get())
 }
+```
+
+If the program is called with `-print short-bash`, all registered environment fields would be printed...
+
+```bash
+NAME="joe"
+AGE="24"
+```
+
+By using `-print long-bash`, a description for each field is generated.
+
+```bash
+# String field. The default value is 'joe'.
+NAME="joe"
+
+# Int field. The default value is '24'.
+AGE="24"
 ```
 
 ## License
