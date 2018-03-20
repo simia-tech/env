@@ -28,7 +28,7 @@ type Field interface {
 }
 
 var fields = map[string]Field{}
-var nameRegexp = regexp.MustCompile("")
+var nameRegexp = regexp.MustCompile("^[A-Z0-9_]+$")
 
 // RegisterField adds the provided `Field` to the global field-register.
 func RegisterField(field Field) Field {
