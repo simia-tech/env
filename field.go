@@ -14,6 +14,11 @@
 
 package env
 
+import (
+	"fmt"
+	"regexp"
+)
+
 // Field implements an environment configuration field.
 type Field interface {
 	Name() string
@@ -22,23 +27,32 @@ type Field interface {
 	Description() string
 }
 
-var fields = []Field{}
+var fields = map[string]Field{}
+var nameRegexp = regexp.MustCompile("")
 
 // RegisterField adds the provided `Field` to the global field-register.
-func RegisterField(field Field) {
-	fields = append(fields, field)
+func RegisterField(field Field) Field {
+	name := field.Name()
+	if !nameRegexp.MatchString(name) {
+		panic(fmt.Sprintf("field name [%s] must only contain capital letters, numbers or underscores", name))
+	}
+	if f, ok := fields[name]; ok {
+		return f
+	}
+	fields[name] = field
+	return field
 }
 
 // Fields returns a slice of strings with all registered fields.
 func Fields() []string {
 	names := []string{}
-	for _, field := range fields {
-		names = append(names, field.Name())
+	for name := range fields {
+		names = append(names, name)
 	}
 	return names
 }
 
 // Clear clears the field register.
 func Clear() {
-	fields = []Field{}
+	fields = map[string]Field{}
 }

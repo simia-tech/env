@@ -60,13 +60,15 @@ func printLongBash(w io.Writer) {
 }
 
 func printShortDockerfile(w io.Writer) {
-	for index, field := range fields {
+	index := 0
+	for name, field := range fields {
 		if index == 0 {
 			fmt.Fprintf(w, "ENV ")
 		} else {
 			fmt.Fprintf(w, " \\\n    ")
 		}
-		fmt.Fprintf(w, "%s=\"%s\"", field.Name(), field.Value())
+		fmt.Fprintf(w, "%s=\"%s\"", name, field.Value())
+		index++
 	}
 	fmt.Fprintln(w)
 }

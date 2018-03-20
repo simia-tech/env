@@ -22,17 +22,17 @@ import (
 
 var printFlag *string
 
-// SetUpPrintFlag should be called before a call to `flag.Parse` and sets up an extra flag that is used by
+// SetUpFlags should be called before a call to `flag.Parse` and sets up an extra flag that is used by
 // `EvaluatePrintFlag` to indicate that the environment should be printed.
-func SetUpPrintFlag() {
+func SetUpFlags() {
 	printFlag = flag.String("print", "", "print the environment in the given format. format can be 'short-bash', 'long-bash', 'short-dockerfile' and 'long-dockerfile'")
 }
 
-// EvaluatePrintFlag tests if the print-flag was given at the program start and prints the registered
+// EvaluateFlags tests if the print-flag was given at the program start and prints the registered
 // environment fields with thier values to stdout using the specified format. Afterwards, the program exits
 // with return code 2. It should be called after the flag has been set up with `SetUpPrintFlag` and the flags
 // has been parsed with `flag.Parse`.
-func EvaluatePrintFlag() {
+func EvaluateFlags() {
 	if printFlag == nil {
 		return
 	}
