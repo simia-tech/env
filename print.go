@@ -17,6 +17,7 @@ package env
 import (
 	"fmt"
 	"io"
+	"sort"
 )
 
 // Print prints the environment in the provided format.
@@ -46,37 +47,49 @@ func Print(w io.Writer, format string) error {
 }
 
 func printShortBash(w io.Writer) {
-	for _, field := range fields {
+	forEachField(func(field Field) {
 		fmt.Fprintf(w, "%s=\"%s\"\n", field.Name(), field.Value())
-	}
+	})
 }
 
 func printLongBash(w io.Writer) {
-	for _, field := range fields {
+	forEachField(func(field Field) {
 		fmt.Fprintf(w, "\n")
 		fmt.Fprintf(w, "# %s\n", field.Description())
 		fmt.Fprintf(w, "%s=\"%s\"\n", field.Name(), field.Value())
-	}
+	})
 }
 
 func printShortDockerfile(w io.Writer) {
 	index := 0
-	for name, field := range fields {
+	forEachField(func(field Field) {
 		if index == 0 {
 			fmt.Fprintf(w, "ENV ")
 		} else {
 			fmt.Fprintf(w, " \\\n    ")
 		}
-		fmt.Fprintf(w, "%s=\"%s\"", name, field.Value())
+		fmt.Fprintf(w, "%s=\"%s\"", field.Name(), field.Value())
 		index++
-	}
+	})
 	fmt.Fprintln(w)
 }
 
 func printLongDockerfile(w io.Writer) {
-	for _, field := range fields {
+	forEachField(func(field Field) {
 		fmt.Fprintln(w)
 		fmt.Fprintf(w, "# %s\n", field.Description())
 		fmt.Fprintf(w, "ENV %s %s\n", field.Name(), field.Value())
+	})
+}
+
+func forEachField(fn func(Field)) {
+	keys := make([]string, 0, len(fields))
+	for key := range fields {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+
+	for _, key := range keys {
+		fn(fields[key])
 	}
 }

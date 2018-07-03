@@ -26,6 +26,7 @@ import (
 
 func TestPrint(t *testing.T) {
 	env.Clear()
+	env.String("TEST_TWO", "default")
 	env.String("TEST_ONE", "default", env.Required(), env.AllowedValues("one", "two", "three"))
 
 	tcs := []struct {
@@ -33,10 +34,10 @@ func TestPrint(t *testing.T) {
 		format         string
 		expectedOutput string
 	}{
-		{"ShortBash", "short-bash", "TEST_ONE=\"default\"\n"},
-		{"LongBash", "long-bash", "\n# String field. Required field. Allowed values are 'one', 'two' and 'three'. The default value is 'default'.\nTEST_ONE=\"default\"\n"},
-		{"ShortDockerfile", "short-dockerfile", "ENV TEST_ONE=\"default\"\n"},
-		{"LongDockerfile", "long-dockerfile", "\n# String field. Required field. Allowed values are 'one', 'two' and 'three'. The default value is 'default'.\nENV TEST_ONE default\n"},
+		{"ShortBash", "short-bash", "TEST_ONE=\"default\"\nTEST_TWO=\"default\"\n"},
+		{"LongBash", "long-bash", "\n# String field. Required field. Allowed values are 'one', 'two' and 'three'. The default value is 'default'.\nTEST_ONE=\"default\"\n\n# String field. The default value is 'default'.\nTEST_TWO=\"default\"\n"},
+		{"ShortDockerfile", "short-dockerfile", "ENV TEST_ONE=\"default\" \\\n    TEST_TWO=\"default\"\n"},
+		{"LongDockerfile", "long-dockerfile", "\n# String field. Required field. Allowed values are 'one', 'two' and 'three'. The default value is 'default'.\nENV TEST_ONE default\n\n# String field. The default value is 'default'.\nENV TEST_TWO default\n"},
 	}
 
 	for _, tc := range tcs {
