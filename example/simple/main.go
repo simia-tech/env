@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 
 	"github.com/simia-tech/env"
@@ -13,9 +12,7 @@ var (
 )
 
 func main() {
-	env.SetUpFlags()
-	flag.Parse()
-	env.EvaluateFlags()
+	env.ParseFlags()
 
 	fmt.Printf("%s is %d years old\n", name.Get(), age.Get())
 }
