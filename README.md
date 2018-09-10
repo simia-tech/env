@@ -17,9 +17,7 @@ var (
 )
 
 func main() {
-	env.SetUpPrintFlag()
-	flag.Parse()
-	env.EvaluatePrintFlag()
+	env.ParseFlags()
 
 	fmt.Printf("%s is %d years old\n", name.Get(), age.Get())
 }
