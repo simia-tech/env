@@ -25,25 +25,18 @@ const (
 
 // BoolField implements a duration field.
 type BoolField struct {
-	name         string
+	*field
 	defaultValue bool
-	options      *options
 }
 
 // Bool registers a field of the provided name.
 func Bool(name string, defaultValue bool, opts ...Option) *BoolField {
 	field := &BoolField{
-		name:         name,
+		field:        newField("Boolean", name, append(opts, AllowedValues("0", "1", falseValue, trueValue, "no", "yes"))),
 		defaultValue: defaultValue,
-		options:      newOptions([]string{"Bool field."}, append(opts, AllowedValues("0", "1", falseValue, trueValue, "no", "yes"))),
 	}
 	RegisterField(field)
 	return field
-}
-
-// Name returns the field name.
-func (i *BoolField) Name() string {
-	return i.name
 }
 
 // Value returns the field's value.
@@ -64,7 +57,7 @@ func (i *BoolField) DefaultValue() string {
 
 // Description returns the field's description.
 func (i *BoolField) Description() string {
-	return i.options.description(i.DefaultValue())
+	return i.description(i.DefaultValue())
 }
 
 // Get returns the field value or the default value.

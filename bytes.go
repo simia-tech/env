@@ -21,25 +21,18 @@ import (
 
 // BytesField implements a string field.
 type BytesField struct {
-	name         string
+	*field
 	defaultValue []byte
-	options      *options
 }
 
 // Bytes registers a field of the provided name.
 func Bytes(name string, defaultValue []byte, opts ...Option) *BytesField {
 	field := &BytesField{
-		name:         name,
+		field:        newField("Bytes", name, opts),
 		defaultValue: defaultValue,
-		options:      newOptions([]string{"Bytes field."}, opts),
 	}
 	RegisterField(field)
 	return field
-}
-
-// Name returns the field name.
-func (bf *BytesField) Name() string {
-	return bf.name
 }
 
 // Value returns the field's value.
@@ -54,7 +47,7 @@ func (bf *BytesField) DefaultValue() string {
 
 // Description returns the field's description.
 func (bf *BytesField) Description() string {
-	return bf.options.description(bf.DefaultValue())
+	return bf.description(bf.DefaultValue())
 }
 
 // Get returns the field value or the default value.

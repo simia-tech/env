@@ -1,7 +1,8 @@
-module github.com/simia-tech/env
+module github.com/simia-tech/env/v1
 
 require (
-	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/simia-tech/env v0.1.0
 	github.com/stretchr/testify v1.2.2
 )
+
+go 1.13

@@ -14,11 +14,6 @@
 
 package env
 
-import (
-	"fmt"
-	"strings"
-)
-
 // Option defines an Option that can modify the options struct.
 type Option func(*options)
 
@@ -26,11 +21,10 @@ type options struct {
 	required      bool
 	allowedValues []string
 	desc          string
-	descSentences []string
 }
 
-func newOptions(descSentences []string, opts []Option) *options {
-	o := &options{descSentences: descSentences}
+func newOptions(opts []Option) *options {
+	o := &options{}
 	for _, opt := range opts {
 		opt(o)
 	}
@@ -68,22 +62,4 @@ func (o *options) isAllowedValue(value string) bool {
 		}
 	}
 	return false
-}
-
-func (o *options) description(defaultValue string) string {
-	if o == nil {
-		return ""
-	}
-	if o.desc != "" {
-		return o.desc
-	}
-	sentences := o.descSentences
-	if o.required {
-		sentences = append(sentences, "Required field.")
-	}
-	if o.allowedValues != nil {
-		sentences = append(sentences, fmt.Sprintf("Allowed values are %s.", joinStringValues(o.allowedValues)))
-	}
-	sentences = append(sentences, "The default value is '"+defaultValue+"'.")
-	return strings.Join(sentences, " ")
 }

@@ -21,25 +21,18 @@ import (
 
 // DurationField implements a duration field.
 type DurationField struct {
-	name         string
+	*field
 	defaultValue time.Duration
-	options      *options
 }
 
 // Duration registers a field of the provided name.
 func Duration(name string, defaultValue time.Duration, opts ...Option) *DurationField {
 	field := &DurationField{
-		name:         name,
+		field:        newField("Duration", name, opts),
 		defaultValue: defaultValue,
-		options:      newOptions([]string{"Duration field."}, opts),
 	}
 	RegisterField(field)
 	return field
-}
-
-// Name returns the field name.
-func (df *DurationField) Name() string {
-	return df.name
 }
 
 // Value returns the field's value.
@@ -54,7 +47,7 @@ func (df *DurationField) DefaultValue() string {
 
 // Description returns the field's description.
 func (df *DurationField) Description() string {
-	return df.options.description(df.DefaultValue())
+	return df.description(df.DefaultValue())
 }
 
 // Get returns the field value or the default value.

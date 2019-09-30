@@ -23,25 +23,18 @@ const separator = ","
 
 // StringsField implements a strings field.
 type StringsField struct {
-	name         string
+	*field
 	defaultValue []string
-	options      *options
 }
 
 // Strings registers a field of the provided name.
 func Strings(name string, defaultValue []string, opts ...Option) *StringsField {
 	field := &StringsField{
-		name:         name,
+		field:        newField("Strings", name, opts),
 		defaultValue: defaultValue,
-		options:      newOptions([]string{"Strings field."}, opts),
 	}
 	RegisterField(field)
 	return field
-}
-
-// Name returns the field name.
-func (sf *StringsField) Name() string {
-	return sf.name
 }
 
 // Value returns the field's value.
@@ -56,7 +49,7 @@ func (sf *StringsField) DefaultValue() string {
 
 // Description returns the field's description.
 func (sf *StringsField) Description() string {
-	return sf.options.description(sf.DefaultValue())
+	return sf.description(sf.DefaultValue())
 }
 
 // Get returns the field value or the default value.

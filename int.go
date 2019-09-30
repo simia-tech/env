@@ -21,25 +21,18 @@ import (
 
 // IntField implements a duration field.
 type IntField struct {
-	name         string
+	*field
 	defaultValue int
-	options      *options
 }
 
 // Int registers a field of the provided name.
 func Int(name string, defaultValue int, opts ...Option) *IntField {
 	field := &IntField{
-		name:         name,
+		field:        newField("Int", name, opts),
 		defaultValue: defaultValue,
-		options:      newOptions([]string{"Int field."}, opts),
 	}
 	RegisterField(field)
 	return field
-}
-
-// Name returns the field name.
-func (i *IntField) Name() string {
-	return i.name
 }
 
 // Value returns the field's value.
@@ -54,7 +47,7 @@ func (i *IntField) DefaultValue() string {
 
 // Description returns the field's description.
 func (i *IntField) Description() string {
-	return i.options.description(i.DefaultValue())
+	return i.description(i.DefaultValue())
 }
 
 // Get returns the field value or the default value.

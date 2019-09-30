@@ -17,6 +17,8 @@ package env
 import (
 	"fmt"
 	"regexp"
+	"runtime"
+	"strings"
 )
 
 // Field implements an environment configuration field.
@@ -55,4 +57,41 @@ func Fields() []string {
 // Clear clears the field register.
 func Clear() {
 	fields = map[string]Field{}
+}
+
+type field struct {
+	label    string
+	name     string
+	location string
+	options  *options
+}
+
+func newField(label, name string, opts []Option) *field {
+	_, filename, line, _ := runtime.Caller(2)
+	return &field{
+		label:    label,
+		name:     name,
+		location: fmt.Sprintf("%s:%d", filename, line),
+		options:  newOptions(opts),
+	}
+}
+
+func (f *field) Name() string {
+	return f.name
+}
+
+func (f *field) description(defaultValue string) string {
+	if f.options.desc != "" {
+		return f.options.desc
+	}
+	sentences := []string{f.label + " field."}
+	if f.options.required {
+		sentences = append(sentences, "Required field.")
+	}
+	if f.options.allowedValues != nil {
+		sentences = append(sentences, fmt.Sprintf("Allowed values are %s.", joinStringValues(f.options.allowedValues)))
+	}
+	sentences = append(sentences, "The default value is '"+defaultValue+"'.")
+	sentences = append(sentences, "Defined at "+f.location+".")
+	return strings.Join(sentences, " ")
 }

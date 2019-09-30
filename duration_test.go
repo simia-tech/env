@@ -20,7 +20,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/simia-tech/env"
+	"github.com/simia-tech/env/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

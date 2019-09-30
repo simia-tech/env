@@ -24,17 +24,16 @@ import (
 // environment fields with thier values to stdout using the specified format. Afterwards, the program exits
 // with return code 2.
 func ParseFlags() {
-	printFlag := flag.String("print", "", "print the environment in the given format. format can be 'short-bash', 'long-bash', 'short-dockerfile' and 'long-dockerfile'")
+	printEnvFlag := flag.Bool("print-env", false, "print the environment with the current values")
+	printEnvFormatFlag := flag.String("print-env-format", "short-bash", "print the environment in the given format. format can be 'short-bash', 'long-bash', 'short-dockerfile' and 'long-dockerfile'")
 
 	flag.Parse()
 
-	if printFlag == nil {
+	if !*printEnvFlag {
 		return
 	}
-	if *printFlag != "" {
-		if err := Print(os.Stdout, *printFlag); err != nil {
-			log.Fatal(err)
-		}
-		os.Exit(2)
+	if err := Print(os.Stdout, *printEnvFormatFlag); err != nil {
+		log.Fatal(err)
 	}
+	os.Exit(2)
 }

@@ -22,25 +22,18 @@ import (
 
 // IntsField implements a ints field.
 type IntsField struct {
-	name         string
+	*field
 	defaultValue []int
-	options      *options
 }
 
 // Ints registers a field of the provided name.
 func Ints(name string, defaultValue []int, opts ...Option) *IntsField {
 	field := &IntsField{
-		name:         name,
+		field:        newField("Ints", name, opts),
 		defaultValue: defaultValue,
-		options:      newOptions([]string{"Strings field."}, opts),
 	}
 	RegisterField(field)
 	return field
-}
-
-// Name returns the field name.
-func (isf *IntsField) Name() string {
-	return isf.name
 }
 
 // Value returns the field's value.
@@ -55,7 +48,7 @@ func (isf *IntsField) DefaultValue() string {
 
 // Description returns the field's description.
 func (isf *IntsField) Description() string {
-	return isf.options.description(isf.DefaultValue())
+	return isf.description(isf.DefaultValue())
 }
 
 // Get returns the field value or the default value.
