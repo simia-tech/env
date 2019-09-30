@@ -35,32 +35,24 @@ func TestInt(t *testing.T) {
 		lastErr = err
 	}
 
-	tcs := []struct {
-		name          string
-		field         *env.IntField
-		value         string
-		expectedValue int
-		expectedErr   error
-	}{
-		{"Value", optional, "2", 2, nil},
-		{"DefaultValue", optional, "", 1, nil},
-		{"ParseError", optional, "abc", 1, fmt.Errorf("int field OPTIONAL_FIELD could not be parsed - using default value '1'")},
-		{"RequiredAndSet", required, "2", 2, nil},
-		{"RequiredNotSet", required, "", 1, fmt.Errorf("required field REQUIRED_FIELD is not set - using default value '1'")},
-		{"AllowedValue", allowed, "2", 2, nil},
-		{"UnallowedValue", allowed, "4", 1, fmt.Errorf("field ALLOWED_FIELD does not allow value '4' (allowed values are '1', '2' and '3') - using default value '1'")},
-	}
+	testFn := func(field *env.IntField, value string, expectValue int, expectErr error) func(*testing.T) {
+		return func(t *testing.T) {
+			require.NoError(t, os.Setenv(field.Name(), value))
 
-	for _, tc := range tcs {
-		t.Run(tc.name, func(t *testing.T) {
-			require.NoError(t, os.Setenv(tc.field.Name(), tc.value))
+			assert.Equal(t, expectValue, field.Get())
 
-			assert.Equal(t, tc.expectedValue, tc.field.Get())
-
-			if tc.expectedErr != nil {
-				assert.Equal(t, tc.expectedErr, lastErr)
+			if expectErr != nil {
+				assert.Equal(t, expectErr, lastErr)
 				lastErr = nil
 			}
-		})
+		}
 	}
+
+	t.Run("Value", testFn(optional, "2", 2, nil))
+	t.Run("DefaultValue", testFn(optional, "", 1, nil))
+	t.Run("ParseError", testFn(optional, "abc", 1, fmt.Errorf("int field OPTIONAL_FIELD could not be parsed - using default value '1'")))
+	t.Run("RequiredAndSet", testFn(required, "2", 2, nil))
+	t.Run("RequiredNotSet", testFn(required, "", 1, fmt.Errorf("required field REQUIRED_FIELD is not set - using default value '1'")))
+	t.Run("AllowedValue", testFn(allowed, "2", 2, nil))
+	t.Run("UnallowedValue", testFn(allowed, "4", 1, fmt.Errorf("field ALLOWED_FIELD does not allow value '4' (allowed values are '1', '2' and '3') - using default value '1'")))
 }

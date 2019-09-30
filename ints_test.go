@@ -35,31 +35,23 @@ func TestInts(t *testing.T) {
 		lastErr = err
 	}
 
-	tcs := []struct {
-		name          string
-		field         *env.IntsField
-		value         string
-		expectedValue []int
-		expectedErr   error
-	}{
-		{"Value", optional, "456", []int{456}, nil},
-		{"DefaultValue", optional, "", []int{123}, nil},
-		{"RequiredAndSet", required, "456", []int{456}, nil},
-		{"RequiredNotSet", required, "", []int{123}, fmt.Errorf("required field REQUIRED_FIELD is not set - using default value '123'")},
-		{"AllowedValue", allowed, "456", []int{456}, nil},
-		{"UnallowedValue", allowed, "789", []int{123}, fmt.Errorf("field ALLOWED_FIELD does not allow value '789' (allowed values are '123' and '456') - using default value '123'")},
-	}
+	testFn := func(field *env.IntsField, value string, expectValue []int, expectErr error) func(*testing.T) {
+		return func(t *testing.T) {
+			require.NoError(t, os.Setenv(field.Name(), value))
 
-	for _, tc := range tcs {
-		t.Run(tc.name, func(t *testing.T) {
-			require.NoError(t, os.Setenv(tc.field.Name(), tc.value))
+			assert.Equal(t, expectValue, field.Get())
 
-			assert.Equal(t, tc.expectedValue, tc.field.Get())
-
-			if tc.expectedErr != nil {
-				assert.Equal(t, tc.expectedErr, lastErr)
+			if expectErr != nil {
+				assert.Equal(t, expectErr, lastErr)
 				lastErr = nil
 			}
-		})
+		}
 	}
+
+	t.Run("Value", testFn(optional, "456", []int{456}, nil))
+	t.Run("DefaultValue", testFn(optional, "", []int{123}, nil))
+	t.Run("RequiredAndSet", testFn(required, "456", []int{456}, nil))
+	t.Run("RequiredNotSet", testFn(required, "", []int{123}, fmt.Errorf("required field REQUIRED_FIELD is not set - using default value '123'")))
+	t.Run("AllowedValue", testFn(allowed, "456", []int{456}, nil))
+	t.Run("UnallowedValue", testFn(allowed, "789", []int{123}, fmt.Errorf("field ALLOWED_FIELD does not allow value '789' (allowed values are '123' and '456') - using default value '123'")))
 }

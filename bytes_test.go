@@ -35,31 +35,23 @@ func TestBytes(t *testing.T) {
 		lastErr = err
 	}
 
-	tcs := []struct {
-		name          string
-		field         *env.BytesField
-		value         string
-		expectedValue []byte
-		expectedErr   error
-	}{
-		{"Value", optional, "cd", []byte{0xcd}, nil},
-		{"DefaultValue", optional, "", []byte{0xab}, nil},
-		{"RequiredAndSet", required, "cd", []byte{0xcd}, nil},
-		{"RequiredNotSet", required, "", []byte{0xab}, fmt.Errorf("required field REQUIRED_FIELD is not set - using default value 'ab'")},
-		{"AllowedValue", allowed, "cd", []byte{0xcd}, nil},
-		{"UnallowedValue", allowed, "ef", []byte{0xab}, fmt.Errorf("field ALLOWED_FIELD does not allow value 'ef' (allowed values are 'ab' and 'cd') - using default value 'ab'")},
-	}
+	testFn := func(field *env.BytesField, value string, expectValue []byte, expectErr error) func(*testing.T) {
+		return func(t *testing.T) {
+			require.NoError(t, os.Setenv(field.Name(), value))
 
-	for _, tc := range tcs {
-		t.Run(tc.name, func(t *testing.T) {
-			require.NoError(t, os.Setenv(tc.field.Name(), tc.value))
+			assert.Equal(t, expectValue, field.Get())
 
-			assert.Equal(t, tc.expectedValue, tc.field.Get())
-
-			if tc.expectedErr != nil {
-				assert.Equal(t, tc.expectedErr, lastErr)
+			if expectErr != nil {
+				assert.Equal(t, expectErr, lastErr)
 				lastErr = nil
 			}
-		})
+		}
 	}
+
+	t.Run("Value", testFn(optional, "cd", []byte{0xcd}, nil))
+	t.Run("DefaultValue", testFn(optional, "", []byte{0xab}, nil))
+	t.Run("RequiredAndSet", testFn(required, "cd", []byte{0xcd}, nil))
+	t.Run("RequiredNotSet", testFn(required, "", []byte{0xab}, fmt.Errorf("required field REQUIRED_FIELD is not set - using default value 'ab'")))
+	t.Run("AllowedValue", testFn(allowed, "cd", []byte{0xcd}, nil))
+	t.Run("UnallowedValue", testFn(allowed, "ef", []byte{0xab}, fmt.Errorf("field ALLOWED_FIELD does not allow value 'ef' (allowed values are 'ab' and 'cd') - using default value 'ab'")))
 }

@@ -34,30 +34,22 @@ func TestBool(t *testing.T) {
 		lastErr = err
 	}
 
-	tcs := []struct {
-		name          string
-		field         *env.BoolField
-		value         string
-		expectedValue bool
-		expectedErr   error
-	}{
-		{"Value", optional, "1", true, nil},
-		{"DefaultValue", optional, "", false, nil},
-		{"RequiredAndSet", required, "yes", true, nil},
-		{"RequiredNotSet", required, "", false, fmt.Errorf("required field REQUIRED_FIELD is not set - using default value 'false'")},
-		{"UnallowedValue", optional, "okaydokay", false, fmt.Errorf("field OPTIONAL_FIELD does not allow value 'okaydokay' (allowed values are '0', '1', 'false', 'true', 'no' and 'yes') - using default value 'false'")},
-	}
+	testFn := func(field *env.BoolField, value string, expectValue bool, expectErr error) func(*testing.T) {
+		return func(t *testing.T) {
+			require.NoError(t, os.Setenv(field.Name(), value))
 
-	for _, tc := range tcs {
-		t.Run(tc.name, func(t *testing.T) {
-			require.NoError(t, os.Setenv(tc.field.Name(), tc.value))
+			assert.Equal(t, expectValue, field.Get())
 
-			assert.Equal(t, tc.expectedValue, tc.field.Get())
-
-			if tc.expectedErr != nil {
-				assert.Equal(t, tc.expectedErr, lastErr)
+			if expectErr != nil {
+				assert.Equal(t, expectErr, lastErr)
 				lastErr = nil
 			}
-		})
+		}
 	}
+
+	t.Run("Value", testFn(optional, "1", true, nil))
+	t.Run("DefaultValue", testFn(optional, "", false, nil))
+	t.Run("RequiredAndSet", testFn(required, "yes", true, nil))
+	t.Run("RequiredNotSet", testFn(required, "", false, fmt.Errorf("required field REQUIRED_FIELD is not set - using default value 'false'")))
+	t.Run("UnallowedValue", testFn(optional, "okaydokay", false, fmt.Errorf("field OPTIONAL_FIELD does not allow value 'okaydokay' (allowed values are '0', '1', 'false', 'true', 'no' and 'yes') - using default value 'false'")))
 }

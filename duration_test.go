@@ -36,32 +36,24 @@ func TestDuration(t *testing.T) {
 		lastErr = err
 	}
 
-	tcs := []struct {
-		name          string
-		field         *env.DurationField
-		value         string
-		expectedValue time.Duration
-		expectedErr   error
-	}{
-		{"Value", optional, "1s", time.Second, nil},
-		{"DefaultValue", optional, "", time.Minute, nil},
-		{"ParseError", optional, "abc", time.Minute, fmt.Errorf("duration field OPTIONAL_FIELD could not be parsed - using default value '1m0s'")},
-		{"RequiredAndSet", required, "1s", time.Second, nil},
-		{"RequiredNotSet", required, "", time.Minute, fmt.Errorf("required field REQUIRED_FIELD is not set - using default value '1m0s'")},
-		{"AllowedValue", allowed, "1s", time.Second, nil},
-		{"UnallowedValue", allowed, "1ms", time.Minute, fmt.Errorf("field ALLOWED_FIELD does not allow value '1ms' (allowed values are '1s', '1m' and '1h') - using default value '1m0s'")},
-	}
+	testFn := func(field *env.DurationField, value string, expectValue time.Duration, expectErr error) func(*testing.T) {
+		return func(t *testing.T) {
+			require.NoError(t, os.Setenv(field.Name(), value))
 
-	for _, tc := range tcs {
-		t.Run(tc.name, func(t *testing.T) {
-			require.NoError(t, os.Setenv(tc.field.Name(), tc.value))
+			assert.Equal(t, expectValue, field.Get())
 
-			assert.Equal(t, tc.expectedValue, tc.field.Get())
-
-			if tc.expectedErr != nil {
-				assert.Equal(t, tc.expectedErr, lastErr)
+			if expectErr != nil {
+				assert.Equal(t, expectErr, lastErr)
 				lastErr = nil
 			}
-		})
+		}
 	}
+
+	t.Run("Value", testFn(optional, "1s", time.Second, nil))
+	t.Run("DefaultValue", testFn(optional, "", time.Minute, nil))
+	t.Run("ParseError", testFn(optional, "abc", time.Minute, fmt.Errorf("duration field OPTIONAL_FIELD could not be parsed - using default value '1m0s'")))
+	t.Run("RequiredAndSet", testFn(required, "1s", time.Second, nil))
+	t.Run("RequiredNotSet", testFn(required, "", time.Minute, fmt.Errorf("required field REQUIRED_FIELD is not set - using default value '1m0s'")))
+	t.Run("AllowedValue", testFn(allowed, "1s", time.Second, nil))
+	t.Run("UnallowedValue", testFn(allowed, "1ms", time.Minute, fmt.Errorf("field ALLOWED_FIELD does not allow value '1ms' (allowed values are '1s', '1m' and '1h') - using default value '1m0s'")))
 }
