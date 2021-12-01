@@ -12,31 +12,31 @@ the `RegisterField` function.
 
 ```go
 var (
-	name = env.String("NAME", "joe")
-	age  = env.Int("AGE", 24)
+    name = env.String("NAME", "joe")
+    age  = env.Int("AGE", 24)
 )
 
 func main() {
-	env.ParseFlags()
+    env.ParseFlags()
 
-	fmt.Printf("%s is %d years old\n", name.Get(), age.Get())
+    fmt.Printf("%s is %d years old\n", name.Get(), age.Get())
 }
 ```
 
-If the program is called with `-print short-bash`, all registered environment fields would be printed...
+If the program is called with `-print-env`, all registered environment fields would be printed...
 
 ```bash
 NAME="joe"
 AGE="24"
 ```
 
-By using `-print long-bash`, a description for each field is generated.
+By using `-print-env -print-env-format long-bash`, a description for each field is generated.
 
 ```bash
-# String field. The default value is 'joe'.
+# String field. The default value is 'joe'. Defined at .../main.go:11.
 NAME="joe"
 
-# Int field. The default value is '24'.
+# Int field. The default value is '24'. Defined at .../main.go:10.
 AGE="24"
 ```
 
