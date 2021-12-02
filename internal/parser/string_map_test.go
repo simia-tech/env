@@ -30,6 +30,9 @@ func TestParseStringMap(t *testing.T) {
 		t.Run(testFn(`one:'value \'123\''`, map[string]string{"one": `value '123'`}))
 		t.Run(testFn(`one:'value "123"'`, map[string]string{"one": `value "123"`}))
 		t.Run(testFn(`one:"value '123'"`, map[string]string{"one": `value '123'`}))
+		t.Run(testFn(`"one":value`, map[string]string{"one": "value"}))
+		t.Run(testFn(`"one 123":value`, map[string]string{"one 123": "value"}))
+		t.Run(testFn(`"one \"123\"":value`, map[string]string{`one "123"`: "value"}))
 	})
 
 	t.Run("Format", func(t *testing.T) {
@@ -41,9 +44,7 @@ func TestParseStringMap(t *testing.T) {
 
 		t.Run(testFn(map[string]string{}, ""))
 		t.Run(testFn(map[string]string{"one": ""}, "one"))
-		t.Run(testFn(map[string]string{"one": "", "two": ""}, "one,two"))
 		t.Run(testFn(map[string]string{"one": "value"}, `one:"value"`))
-		t.Run(testFn(map[string]string{"one": "value", "two": "value"}, `one:"value",two:"value"`))
 		t.Run(testFn(map[string]string{"one": `value "123"`}, `one:"value \"123\""`))
 	})
 }

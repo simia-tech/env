@@ -15,8 +15,9 @@
 package env
 
 import (
-	"fmt"
 	"strings"
+
+	"github.com/simia-tech/env/internal/parser"
 )
 
 const separator = ","
@@ -71,11 +72,10 @@ func (f *StringsField) Get() ([]string, error) {
 	if v == "" {
 		return f.defaultValue, nil
 	}
-	values := strings.Split(v, separator)
-	for index, value := range values {
-		if !f.options.isAllowedValue(value) {
-			return f.defaultValue, fmt.Errorf("field %s.%d with value [%s]: %w", f.name, index, value, ErrValueIsNotAllowed)
-		}
+
+	values, err := parser.ParseStrings(v)
+	if err != nil {
+		return f.defaultValue, err
 	}
 	return values, nil
 }

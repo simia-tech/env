@@ -2,6 +2,7 @@ package parser
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -10,18 +11,18 @@ var (
 	ErrUnexpectedRune = errors.New("unexpected rune")
 )
 
-type EmitFunc func(string, string)
+type EmitFunc func(string, string) error
 
 func ParseKeyValues(raw string, emitFn EmitFunc) error {
 	s := state{emitFn: emitFn}
 
-	parseFn := parseFunc(parseKey)
+	parseFn := parseFunc(parseKeyBegin)
 	err := error(nil)
 
-	for _, c := range raw {
+	for index, c := range raw {
 		parseFn, err = parseFn(&s, c)
 		if err != nil {
-			return err
+			return fmt.Errorf("at index %d: %w", index, err)
 		}
 	}
 
@@ -32,7 +33,26 @@ func ParseKeyValues(raw string, emitFn EmitFunc) error {
 
 type parseFunc func(*state, rune) (parseFunc, error)
 
-func parseKey(s *state, c rune) (parseFunc, error) {
+func parseKeyBegin(s *state, c rune) (parseFunc, error) {
+	switch c {
+	case ' ': // skip
+	case ',':
+		if err := s.emit(); err != nil {
+			return nil, err
+		}
+		return parseKeyBegin, nil
+	case '\'':
+		return parseSingleQuotedKey, nil
+	case '"':
+		return parseDoubleQuotedKey, nil
+	default:
+		s.key.WriteRune(c)
+		return parseKeyRaw, nil
+	}
+	return parseKeyBegin, nil
+}
+
+func parseKeyEnd(s *state, c rune) (parseFunc, error) {
 	switch c {
 	case ' ': // skip
 	case ':':
@@ -41,10 +61,57 @@ func parseKey(s *state, c rune) (parseFunc, error) {
 		if err := s.emit(); err != nil {
 			return nil, err
 		}
+		return parseKeyBegin, nil
+	default:
+		return nil, ErrUnexpectedRune
+	}
+	return parseValueEnd, nil
+}
+
+func parseKeyRaw(s *state, c rune) (parseFunc, error) {
+	switch c {
+	case ' ': // skip
+	case ':':
+		return parseValueBegin, nil
+	case ',':
+		if err := s.emit(); err != nil {
+			return nil, err
+		}
+		return parseKeyBegin, nil
 	default:
 		s.key.WriteRune(c)
 	}
-	return parseKey, nil
+	return parseKeyRaw, nil
+}
+
+func parseSingleQuotedKey(s *state, c rune) (parseFunc, error) {
+	switch c {
+	case '\\':
+		return func(s *state, c rune) (parseFunc, error) {
+			s.key.WriteRune(c)
+			return parseSingleQuotedKey, nil
+		}, nil
+	case '\'':
+		return parseKeyEnd, nil
+	default:
+		s.key.WriteRune(c)
+	}
+	return parseSingleQuotedKey, nil
+}
+
+func parseDoubleQuotedKey(s *state, c rune) (parseFunc, error) {
+	switch c {
+	case '\\':
+		return func(s *state, c rune) (parseFunc, error) {
+			s.key.WriteRune(c)
+			return parseDoubleQuotedKey, nil
+		}, nil
+	case '"':
+		return parseKeyEnd, nil
+	default:
+		s.key.WriteRune(c)
+	}
+	return parseDoubleQuotedKey, nil
 }
 
 func parseValueBegin(s *state, c rune) (parseFunc, error) {
@@ -54,7 +121,7 @@ func parseValueBegin(s *state, c rune) (parseFunc, error) {
 		if err := s.emit(); err != nil {
 			return nil, err
 		}
-		return parseKey, nil
+		return parseKeyBegin, nil
 	case '\'':
 		return parseSingleQuotedValue, nil
 	case '"':
@@ -73,7 +140,7 @@ func parseValueEnd(s *state, c rune) (parseFunc, error) {
 		if err := s.emit(); err != nil {
 			return nil, err
 		}
-		return parseKey, nil
+		return parseKeyBegin, nil
 	default:
 		return nil, ErrUnexpectedRune
 	}
@@ -86,7 +153,7 @@ func parseValueRaw(s *state, c rune) (parseFunc, error) {
 		if err := s.emit(); err != nil {
 			return nil, err
 		}
-		return parseKey, nil
+		return parseKeyBegin, nil
 	default:
 		s.value.WriteRune(c)
 	}
@@ -134,7 +201,9 @@ func (s *state) emit() error {
 		return ErrEmptyKey
 	}
 
-	s.emitFn(s.key.String(), s.value.String())
+	if err := s.emitFn(s.key.String(), s.value.String()); err != nil {
+		return err
+	}
 
 	s.key.Reset()
 	s.value.Reset()

@@ -7,8 +7,9 @@ import (
 
 func ParseStringMap(raw string) (map[string]string, error) {
 	m := map[string]string{}
-	emitFn := func(key, value string) {
+	emitFn := func(key, value string) error {
 		m[key] = value
+		return nil
 	}
 	if err := ParseKeyValues(raw, emitFn); err != nil {
 		return nil, err
