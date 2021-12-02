@@ -15,13 +15,13 @@
 package env_test
 
 import (
-	"fmt"
 	"os"
 	"testing"
 
-	"github.com/simia-tech/env"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/simia-tech/env"
 )
 
 func TestInt(t *testing.T) {
@@ -29,30 +29,26 @@ func TestInt(t *testing.T) {
 		optional = env.Int("OPTIONAL_FIELD", 1)
 		required = env.Int("REQUIRED_FIELD", 1, env.Required())
 		allowed  = env.Int("ALLOWED_FIELD", 1, env.AllowedValues("1", "2", "3"))
-		lastErr  error
 	)
-	env.ErrorHandler = func(err error) {
-		lastErr = err
-	}
 
 	testFn := func(field *env.IntField, value string, expectValue int, expectErr error) func(*testing.T) {
 		return func(t *testing.T) {
 			require.NoError(t, os.Setenv(field.Name(), value))
 
-			assert.Equal(t, expectValue, field.Get())
-
-			if expectErr != nil {
-				assert.Equal(t, expectErr, lastErr)
-				lastErr = nil
+			value, err := field.Get()
+			if expectErr == nil {
+				require.NoError(t, err)
+				assert.Equal(t, expectValue, value)
+			} else {
+				assert.ErrorIs(t, err, expectErr)
 			}
 		}
 	}
 
 	t.Run("Value", testFn(optional, "2", 2, nil))
 	t.Run("DefaultValue", testFn(optional, "", 1, nil))
-	t.Run("ParseError", testFn(optional, "abc", 1, fmt.Errorf("int field OPTIONAL_FIELD could not be parsed - using default value '1'")))
 	t.Run("RequiredAndSet", testFn(required, "2", 2, nil))
-	t.Run("RequiredNotSet", testFn(required, "", 1, fmt.Errorf("required field REQUIRED_FIELD is not set - using default value '1'")))
+	t.Run("RequiredNotSet", testFn(required, "", 1, env.ErrRequiredValueIsMissing))
 	t.Run("AllowedValue", testFn(allowed, "2", 2, nil))
-	t.Run("UnallowedValue", testFn(allowed, "4", 1, fmt.Errorf("field ALLOWED_FIELD does not allow value '4' (allowed values are '1', '2' and '3') - using default value '1'")))
+	t.Run("UnallowedValue", testFn(allowed, "4", 1, env.ErrValueIsNotAllowed))
 }

@@ -15,14 +15,14 @@
 package env_test
 
 import (
-	"fmt"
 	"os"
 	"testing"
 	"time"
 
-	"github.com/simia-tech/env"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/simia-tech/env"
 )
 
 func TestDuration(t *testing.T) {
@@ -30,30 +30,26 @@ func TestDuration(t *testing.T) {
 		optional = env.Duration("OPTIONAL_FIELD", time.Minute)
 		required = env.Duration("REQUIRED_FIELD", time.Minute, env.Required())
 		allowed  = env.Duration("ALLOWED_FIELD", time.Minute, env.AllowedValues("1s", "1m", "1h"))
-		lastErr  error
 	)
-	env.ErrorHandler = func(err error) {
-		lastErr = err
-	}
 
 	testFn := func(field *env.DurationField, value string, expectValue time.Duration, expectErr error) func(*testing.T) {
 		return func(t *testing.T) {
 			require.NoError(t, os.Setenv(field.Name(), value))
 
-			assert.Equal(t, expectValue, field.Get())
-
-			if expectErr != nil {
-				assert.Equal(t, expectErr, lastErr)
-				lastErr = nil
+			value, err := field.Get()
+			if expectErr == nil {
+				require.NoError(t, err)
+				assert.Equal(t, expectValue, value)
+			} else {
+				assert.ErrorIs(t, err, expectErr)
 			}
 		}
 	}
 
 	t.Run("Value", testFn(optional, "1s", time.Second, nil))
 	t.Run("DefaultValue", testFn(optional, "", time.Minute, nil))
-	t.Run("ParseError", testFn(optional, "abc", time.Minute, fmt.Errorf("duration field OPTIONAL_FIELD could not be parsed - using default value '1m0s'")))
 	t.Run("RequiredAndSet", testFn(required, "1s", time.Second, nil))
-	t.Run("RequiredNotSet", testFn(required, "", time.Minute, fmt.Errorf("required field REQUIRED_FIELD is not set - using default value '1m0s'")))
+	t.Run("RequiredNotSet", testFn(required, "", time.Minute, env.ErrRequiredValueIsMissing))
 	t.Run("AllowedValue", testFn(allowed, "1s", time.Second, nil))
-	t.Run("UnallowedValue", testFn(allowed, "1ms", time.Minute, fmt.Errorf("field ALLOWED_FIELD does not allow value '1ms' (allowed values are '1s', '1m' and '1h') - using default value '1m0s'")))
+	t.Run("UnallowedValue", testFn(allowed, "1ms", time.Minute, env.ErrValueIsNotAllowed))
 }

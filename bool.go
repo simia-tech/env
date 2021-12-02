@@ -14,10 +14,6 @@
 
 package env
 
-import (
-	"os"
-)
-
 const (
 	trueValue  = "true"
 	falseValue = "false"
@@ -25,14 +21,14 @@ const (
 
 // BoolField implements a duration field.
 type BoolField struct {
-	*field
+	field
 	defaultValue bool
 }
 
 // Bool registers a field of the provided name.
 func Bool(name string, defaultValue bool, opts ...Option) *BoolField {
 	field := &BoolField{
-		field:        newField("Boolean", name, append(opts, AllowedValues("0", "1", falseValue, trueValue, "no", "yes"))),
+		field:        newField("Boolean", name, append(opts, AllowedValues("0", "1", falseValue, trueValue, "no", "yes", ""))),
 		defaultValue: defaultValue,
 	}
 	RegisterField(field)
@@ -40,43 +36,46 @@ func Bool(name string, defaultValue bool, opts ...Option) *BoolField {
 }
 
 // Value returns the field's value.
-func (i *BoolField) Value() string {
-	if i.Get() {
+func (f *BoolField) Value() string {
+	if f.GetOrDefault() {
 		return trueValue
 	}
 	return falseValue
 }
 
 // DefaultValue returns the field's default value.
-func (i *BoolField) DefaultValue() string {
-	if i.defaultValue {
+func (f *BoolField) DefaultValue() string {
+	if f.defaultValue {
 		return trueValue
 	}
 	return falseValue
 }
 
 // Description returns the field's description.
-func (i *BoolField) Description() string {
-	return i.description(i.DefaultValue())
+func (f *BoolField) Description() string {
+	return f.description(f.DefaultValue())
 }
 
-// Get returns the field value or the default value.
-func (i *BoolField) Get() bool {
-	text := os.Getenv(i.Name())
-	if text == "" {
-		if i.options.required {
-			requiredError(i)
-		}
-		return i.defaultValue
+// GetOrDefault returns the field value or the default in case of an error.
+func (f *BoolField) GetOrDefault() bool {
+	value, err := f.Get()
+	if err != nil {
+		ErrorHandler(err)
+		return f.defaultValue
 	}
-	if !i.options.isAllowedValue(text) {
-		unallowedError(i, text, i.options.allowedValues)
-		return i.defaultValue
+	return value
+}
+
+// Get returns the field value or an error.
+func (f *BoolField) Get() (bool, error) {
+	v, err := f.value()
+	if err != nil {
+		return f.defaultValue, err
 	}
-	switch text {
+	switch v {
 	case "1", trueValue, "yes":
-		return true
+		return true, nil
 	default:
-		return false
+		return false, nil
 	}
 }

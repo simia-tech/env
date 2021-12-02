@@ -15,14 +15,14 @@
 package env
 
 import (
-	"os"
+	"fmt"
 	"strconv"
 	"strings"
 )
 
 // IntsField implements a ints field.
 type IntsField struct {
-	*field
+	field
 	defaultValue []int
 }
 
@@ -37,43 +37,53 @@ func Ints(name string, defaultValue []int, opts ...Option) *IntsField {
 }
 
 // Value returns the field's value.
-func (isf *IntsField) Value() string {
-	return strings.Join(stringsValue(isf.Get()), separator)
+func (f *IntsField) Value() string {
+	return strings.Join(stringsValue(f.GetOrDefault()), separator)
 }
 
 // DefaultValue returns the field's default value.
-func (isf *IntsField) DefaultValue() string {
-	return strings.Join(stringsValue(isf.defaultValue), separator)
+func (f *IntsField) DefaultValue() string {
+	return strings.Join(stringsValue(f.defaultValue), separator)
 }
 
 // Description returns the field's description.
-func (isf *IntsField) Description() string {
-	return isf.description(isf.DefaultValue())
+func (f *IntsField) Description() string {
+	return f.description(f.DefaultValue())
 }
 
-// Get returns the field value or the default value.
-func (isf *IntsField) Get() []int {
-	text := os.Getenv(isf.Name())
-	if text == "" {
-		if isf.options.required {
-			requiredError(isf)
-		}
-		return isf.defaultValue
+// GetOrDefault returns the field value or the default value.
+func (f *IntsField) GetOrDefault() []int {
+	value, err := f.Get()
+	if err != nil {
+		ErrorHandler(err)
+		return f.defaultValue
 	}
-	values := []int{}
-	for _, text := range strings.Split(text, separator) {
-		if !isf.options.isAllowedValue(text) {
-			unallowedError(isf, text, isf.options.allowedValues)
-			return isf.defaultValue
+	return value
+}
+
+// Get returns the field value or an error.
+func (f *IntsField) Get() ([]int, error) {
+	v, err := f.value()
+	if err != nil {
+		return f.defaultValue, err
+	}
+	if v == "" {
+		return f.defaultValue, nil
+	}
+
+	parts := strings.Split(v, separator)
+	values := make([]int, len(parts))
+	for index, v := range parts {
+		if !f.options.isAllowedValue(v) {
+			return f.defaultValue, fmt.Errorf("field %s.%d with value [%s]: %w", f.name, index, v, ErrValueIsNotAllowed)
 		}
-		value, err := strconv.Atoi(text)
+		value, err := strconv.Atoi(v)
 		if err != nil {
-			parseError(isf, "ints", text)
-			return isf.defaultValue
+			return f.defaultValue, fmt.Errorf("field %s.%d parse int [%s]: %w", f.name, index, v, err)
 		}
-		values = append(values, value)
+		values[index] = value
 	}
-	return values
+	return values, nil
 }
 
 func stringsValue(values []int) []string {

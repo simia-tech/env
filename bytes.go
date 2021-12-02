@@ -16,12 +16,12 @@ package env
 
 import (
 	"encoding/hex"
-	"os"
+	"fmt"
 )
 
 // BytesField implements a string field.
 type BytesField struct {
-	*field
+	field
 	defaultValue []byte
 }
 
@@ -36,37 +36,42 @@ func Bytes(name string, defaultValue []byte, opts ...Option) *BytesField {
 }
 
 // Value returns the field's value.
-func (bf *BytesField) Value() string {
-	return hex.EncodeToString(bf.Get())
+func (f *BytesField) Value() string {
+	return hex.EncodeToString(f.GetOrDefault())
 }
 
 // DefaultValue returns the field's default value.
-func (bf *BytesField) DefaultValue() string {
-	return hex.EncodeToString(bf.defaultValue)
+func (f *BytesField) DefaultValue() string {
+	return hex.EncodeToString(f.defaultValue)
 }
 
 // Description returns the field's description.
-func (bf *BytesField) Description() string {
-	return bf.description(bf.DefaultValue())
+func (f *BytesField) Description() string {
+	return f.description(f.DefaultValue())
 }
 
-// Get returns the field value or the default value.
-func (bf *BytesField) Get() []byte {
-	text := os.Getenv(bf.Name())
-	if text == "" {
-		if bf.options.required {
-			requiredError(bf)
-		}
-		return bf.defaultValue
-	}
-	if !bf.options.isAllowedValue(text) {
-		unallowedError(bf, text, bf.options.allowedValues)
-		return bf.defaultValue
-	}
-	value, err := hex.DecodeString(text)
+// GetOrDefault returns the field value or the default value.
+func (f *BytesField) GetOrDefault() []byte {
+	value, err := f.Get()
 	if err != nil {
-		parseError(bf, "bytes", text)
-		return bf.defaultValue
+		ErrorHandler(err)
+		return f.defaultValue
 	}
 	return value
+}
+
+// Get returns the field value or an error.
+func (f *BytesField) Get() ([]byte, error) {
+	v, err := f.value()
+	if err != nil {
+		return f.defaultValue, err
+	}
+	if v == "" {
+		return f.defaultValue, nil
+	}
+	value, err := hex.DecodeString(v)
+	if err != nil {
+		return f.defaultValue, fmt.Errorf("field %s hex decode [%s]: %w", f.name, v, err)
+	}
+	return value, nil
 }

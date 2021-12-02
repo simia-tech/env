@@ -16,6 +16,7 @@ package env
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	"runtime"
 	"strings"
@@ -66,9 +67,9 @@ type field struct {
 	options  *options
 }
 
-func newField(label, name string, opts []Option) *field {
+func newField(label, name string, opts []Option) field {
 	_, filename, line, _ := runtime.Caller(2)
-	return &field{
+	return field{
 		label:    label,
 		name:     name,
 		location: fmt.Sprintf("%s:%d", filename, line),
@@ -78,6 +79,17 @@ func newField(label, name string, opts []Option) *field {
 
 func (f *field) Name() string {
 	return f.name
+}
+
+func (f *field) value() (string, error) {
+	value := os.Getenv(f.name)
+	if f.options.required && value == "" {
+		return "", fmt.Errorf("field %s: %w", f.name, ErrRequiredValueIsMissing)
+	}
+	if !f.options.isAllowedValue(value) {
+		return "", fmt.Errorf("field %s with value [%s]: %w", f.name, value, ErrValueIsNotAllowed)
+	}
+	return value, nil
 }
 
 func (f *field) description(defaultValue string) string {

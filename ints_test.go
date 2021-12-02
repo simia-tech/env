@@ -15,13 +15,13 @@
 package env_test
 
 import (
-	"fmt"
 	"os"
 	"testing"
 
-	"github.com/simia-tech/env"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/simia-tech/env"
 )
 
 func TestInts(t *testing.T) {
@@ -29,21 +29,18 @@ func TestInts(t *testing.T) {
 		optional = env.Ints("OPTIONAL_FIELD", []int{123})
 		required = env.Ints("REQUIRED_FIELD", []int{123}, env.Required())
 		allowed  = env.Ints("ALLOWED_FIELD", []int{123}, env.AllowedValues("123", "456"))
-		lastErr  error
 	)
-	env.ErrorHandler = func(err error) {
-		lastErr = err
-	}
 
 	testFn := func(field *env.IntsField, value string, expectValue []int, expectErr error) func(*testing.T) {
 		return func(t *testing.T) {
 			require.NoError(t, os.Setenv(field.Name(), value))
 
-			assert.Equal(t, expectValue, field.Get())
-
-			if expectErr != nil {
-				assert.Equal(t, expectErr, lastErr)
-				lastErr = nil
+			value, err := field.Get()
+			if expectErr == nil {
+				require.NoError(t, err)
+				assert.Equal(t, expectValue, value)
+			} else {
+				assert.ErrorIs(t, err, expectErr)
 			}
 		}
 	}
@@ -51,7 +48,7 @@ func TestInts(t *testing.T) {
 	t.Run("Value", testFn(optional, "456", []int{456}, nil))
 	t.Run("DefaultValue", testFn(optional, "", []int{123}, nil))
 	t.Run("RequiredAndSet", testFn(required, "456", []int{456}, nil))
-	t.Run("RequiredNotSet", testFn(required, "", []int{123}, fmt.Errorf("required field REQUIRED_FIELD is not set - using default value '123'")))
+	t.Run("RequiredNotSet", testFn(required, "", []int{123}, env.ErrRequiredValueIsMissing))
 	t.Run("AllowedValue", testFn(allowed, "456", []int{456}, nil))
-	t.Run("UnallowedValue", testFn(allowed, "789", []int{123}, fmt.Errorf("field ALLOWED_FIELD does not allow value '789' (allowed values are '123' and '456') - using default value '123'")))
+	t.Run("UnallowedValue", testFn(allowed, "789", []int{123}, env.ErrValueIsNotAllowed))
 }

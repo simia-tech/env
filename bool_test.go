@@ -15,34 +15,31 @@
 package env_test
 
 import (
-	"fmt"
 	"os"
 	"testing"
 
-	"github.com/simia-tech/env"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/simia-tech/env"
 )
 
 func TestBool(t *testing.T) {
 	var (
 		optional = env.Bool("OPTIONAL_FIELD", false)
 		required = env.Bool("REQUIRED_FIELD", false, env.Required())
-		lastErr  error
 	)
-	env.ErrorHandler = func(err error) {
-		lastErr = err
-	}
 
 	testFn := func(field *env.BoolField, value string, expectValue bool, expectErr error) func(*testing.T) {
 		return func(t *testing.T) {
 			require.NoError(t, os.Setenv(field.Name(), value))
 
-			assert.Equal(t, expectValue, field.Get())
-
-			if expectErr != nil {
-				assert.Equal(t, expectErr, lastErr)
-				lastErr = nil
+			value, err := field.Get()
+			if expectErr == nil {
+				require.NoError(t, err)
+				assert.Equal(t, expectValue, value)
+			} else {
+				assert.ErrorIs(t, err, expectErr)
 			}
 		}
 	}
@@ -50,6 +47,6 @@ func TestBool(t *testing.T) {
 	t.Run("Value", testFn(optional, "1", true, nil))
 	t.Run("DefaultValue", testFn(optional, "", false, nil))
 	t.Run("RequiredAndSet", testFn(required, "yes", true, nil))
-	t.Run("RequiredNotSet", testFn(required, "", false, fmt.Errorf("required field REQUIRED_FIELD is not set - using default value 'false'")))
-	t.Run("UnallowedValue", testFn(optional, "okaydokay", false, fmt.Errorf("field OPTIONAL_FIELD does not allow value 'okaydokay' (allowed values are '0', '1', 'false', 'true', 'no' and 'yes') - using default value 'false'")))
+	t.Run("RequiredNotSet", testFn(required, "", false, env.ErrRequiredValueIsMissing))
+	t.Run("UnallowedValue", testFn(optional, "okaydokay", false, env.ErrValueIsNotAllowed))
 }

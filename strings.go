@@ -15,7 +15,7 @@
 package env
 
 import (
-	"os"
+	"fmt"
 	"strings"
 )
 
@@ -23,7 +23,7 @@ const separator = ","
 
 // StringsField implements a strings field.
 type StringsField struct {
-	*field
+	field
 	defaultValue []string
 }
 
@@ -38,35 +38,44 @@ func Strings(name string, defaultValue []string, opts ...Option) *StringsField {
 }
 
 // Value returns the field's value.
-func (sf *StringsField) Value() string {
-	return strings.Join(sf.Get(), separator)
+func (f *StringsField) Value() string {
+	return strings.Join(f.GetOrDefault(), separator)
 }
 
 // DefaultValue returns the field's default value.
-func (sf *StringsField) DefaultValue() string {
-	return strings.Join(sf.defaultValue, separator)
+func (f *StringsField) DefaultValue() string {
+	return strings.Join(f.defaultValue, separator)
 }
 
 // Description returns the field's description.
-func (sf *StringsField) Description() string {
-	return sf.description(sf.DefaultValue())
+func (f *StringsField) Description() string {
+	return f.description(f.DefaultValue())
 }
 
-// Get returns the field value or the default value.
-func (sf *StringsField) Get() []string {
-	text := os.Getenv(sf.Name())
-	if text == "" {
-		if sf.options.required {
-			requiredError(sf)
-		}
-		return sf.defaultValue
+// GetOrDefault returns the field value or the default value.
+func (f *StringsField) GetOrDefault() []string {
+	value, err := f.Get()
+	if err != nil {
+		ErrorHandler(err)
+		return f.defaultValue
 	}
-	values := strings.Split(text, separator)
-	for _, value := range values {
-		if !sf.options.isAllowedValue(value) {
-			unallowedError(sf, value, sf.options.allowedValues)
-			return sf.defaultValue
+	return value
+}
+
+// Get returns the field value or an error
+func (f *StringsField) Get() ([]string, error) {
+	v, err := f.value()
+	if err != nil {
+		return f.defaultValue, err
+	}
+	if v == "" {
+		return f.defaultValue, nil
+	}
+	values := strings.Split(v, separator)
+	for index, value := range values {
+		if !f.options.isAllowedValue(value) {
+			return f.defaultValue, fmt.Errorf("field %s.%d with value [%s]: %w", f.name, index, value, ErrValueIsNotAllowed)
 		}
 	}
-	return values
+	return values, nil
 }

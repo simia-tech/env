@@ -15,9 +15,15 @@
 package env
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
+)
+
+var (
+	ErrRequiredValueIsMissing = errors.New("required value is missing")
+	ErrValueIsNotAllowed      = errors.New("value is not allowed")
 )
 
 // ErrorHandler defines a handler for error messages. By default, LogErrorHandler is set.

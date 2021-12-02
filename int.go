@@ -15,13 +15,13 @@
 package env
 
 import (
-	"os"
+	"fmt"
 	"strconv"
 )
 
 // IntField implements a duration field.
 type IntField struct {
-	*field
+	field
 	defaultValue int
 }
 
@@ -36,37 +36,42 @@ func Int(name string, defaultValue int, opts ...Option) *IntField {
 }
 
 // Value returns the field's value.
-func (i *IntField) Value() string {
-	return strconv.Itoa(i.Get())
+func (f *IntField) Value() string {
+	return strconv.Itoa(f.GetOrDefault())
 }
 
 // DefaultValue returns the field's default value.
-func (i *IntField) DefaultValue() string {
-	return strconv.Itoa(i.defaultValue)
+func (f *IntField) DefaultValue() string {
+	return strconv.Itoa(f.defaultValue)
 }
 
 // Description returns the field's description.
-func (i *IntField) Description() string {
-	return i.description(i.DefaultValue())
+func (f *IntField) Description() string {
+	return f.description(f.DefaultValue())
 }
 
-// Get returns the field value or the default value.
-func (i *IntField) Get() int {
-	text := os.Getenv(i.Name())
-	if text == "" {
-		if i.options.required {
-			requiredError(i)
-		}
-		return i.defaultValue
-	}
-	if !i.options.isAllowedValue(text) {
-		unallowedError(i, text, i.options.allowedValues)
-		return i.defaultValue
-	}
-	value, err := strconv.Atoi(text)
+// GetOrDefault returns the field value or the default value.
+func (f *IntField) GetOrDefault() int {
+	value, err := f.Get()
 	if err != nil {
-		parseError(i, "int", text)
-		return i.defaultValue
+		ErrorHandler(err)
+		return f.defaultValue
 	}
 	return value
+}
+
+// Get returns the field value or an error.
+func (f *IntField) Get() (int, error) {
+	v, err := f.value()
+	if err != nil {
+		return f.defaultValue, err
+	}
+	if v == "" {
+		return f.defaultValue, nil
+	}
+	value, err := strconv.Atoi(v)
+	if err != nil {
+		return f.defaultValue, fmt.Errorf("field %s parse int [%s]: %w", f.name, v, err)
+	}
+	return value, nil
 }

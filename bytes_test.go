@@ -15,13 +15,13 @@
 package env_test
 
 import (
-	"fmt"
 	"os"
 	"testing"
 
-	"github.com/simia-tech/env"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/simia-tech/env"
 )
 
 func TestBytes(t *testing.T) {
@@ -29,21 +29,18 @@ func TestBytes(t *testing.T) {
 		optional = env.Bytes("OPTIONAL_FIELD", []byte{0xab})
 		required = env.Bytes("REQUIRED_FIELD", []byte{0xab}, env.Required())
 		allowed  = env.Bytes("ALLOWED_FIELD", []byte{0xab}, env.AllowedValues("ab", "cd"))
-		lastErr  error
 	)
-	env.ErrorHandler = func(err error) {
-		lastErr = err
-	}
 
 	testFn := func(field *env.BytesField, value string, expectValue []byte, expectErr error) func(*testing.T) {
 		return func(t *testing.T) {
 			require.NoError(t, os.Setenv(field.Name(), value))
 
-			assert.Equal(t, expectValue, field.Get())
-
-			if expectErr != nil {
-				assert.Equal(t, expectErr, lastErr)
-				lastErr = nil
+			value, err := field.Get()
+			if expectErr == nil {
+				require.NoError(t, err)
+				assert.Equal(t, expectValue, value)
+			} else {
+				assert.ErrorIs(t, err, expectErr)
 			}
 		}
 	}
@@ -51,7 +48,7 @@ func TestBytes(t *testing.T) {
 	t.Run("Value", testFn(optional, "cd", []byte{0xcd}, nil))
 	t.Run("DefaultValue", testFn(optional, "", []byte{0xab}, nil))
 	t.Run("RequiredAndSet", testFn(required, "cd", []byte{0xcd}, nil))
-	t.Run("RequiredNotSet", testFn(required, "", []byte{0xab}, fmt.Errorf("required field REQUIRED_FIELD is not set - using default value 'ab'")))
+	t.Run("RequiredNotSet", testFn(required, "", []byte{0xab}, env.ErrRequiredValueIsMissing))
 	t.Run("AllowedValue", testFn(allowed, "cd", []byte{0xcd}, nil))
-	t.Run("UnallowedValue", testFn(allowed, "ef", []byte{0xab}, fmt.Errorf("field ALLOWED_FIELD does not allow value 'ef' (allowed values are 'ab' and 'cd') - using default value 'ab'")))
+	t.Run("UnallowedValue", testFn(allowed, "ef", []byte{0xab}, env.ErrValueIsNotAllowed))
 }

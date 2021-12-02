@@ -15,13 +15,13 @@
 package env
 
 import (
-	"os"
+	"fmt"
 	"time"
 )
 
 // DurationField implements a duration field.
 type DurationField struct {
-	*field
+	field
 	defaultValue time.Duration
 }
 
@@ -36,37 +36,42 @@ func Duration(name string, defaultValue time.Duration, opts ...Option) *Duration
 }
 
 // Value returns the field's value.
-func (df *DurationField) Value() string {
-	return df.Get().String()
+func (f *DurationField) Value() string {
+	return f.GetOrDefault().String()
 }
 
 // DefaultValue returns the field's default value.
-func (df *DurationField) DefaultValue() string {
-	return df.defaultValue.String()
+func (f *DurationField) DefaultValue() string {
+	return f.defaultValue.String()
 }
 
 // Description returns the field's description.
-func (df *DurationField) Description() string {
-	return df.description(df.DefaultValue())
+func (f *DurationField) Description() string {
+	return f.description(f.DefaultValue())
 }
 
-// Get returns the field value or the default value.
-func (df *DurationField) Get() time.Duration {
-	text := os.Getenv(df.Name())
-	if text == "" {
-		if df.options.required {
-			requiredError(df)
-		}
-		return df.defaultValue
-	}
-	if !df.options.isAllowedValue(text) {
-		unallowedError(df, text, df.options.allowedValues)
-		return df.defaultValue
-	}
-	value, err := time.ParseDuration(text)
+// GetOrDefault returns the field value or the default value.
+func (f *DurationField) GetOrDefault() time.Duration {
+	value, err := f.Get()
 	if err != nil {
-		parseError(df, "duration", text)
-		return df.defaultValue
+		ErrorHandler(err)
+		return f.defaultValue
 	}
 	return value
+}
+
+// Get returns the field value or an error.
+func (f *DurationField) Get() (time.Duration, error) {
+	v, err := f.value()
+	if err != nil {
+		return f.defaultValue, err
+	}
+	if v == "" {
+		return f.defaultValue, nil
+	}
+	value, err := time.ParseDuration(v)
+	if err != nil {
+		return f.defaultValue, fmt.Errorf("field %s parse duration [%s]: %w", f.name, v, err)
+	}
+	return value, nil
 }
