@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/simia-tech/env"
+	"github.com/simia-tech/env/v2"
 )
 
 var (

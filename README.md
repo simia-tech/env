@@ -11,6 +11,14 @@ the `RegisterField` function.
 ## Example
 
 ```go
+package main
+
+import (
+    "fmt"
+
+    "github.com/simia-tech/env/v2"
+)
+
 var (
     name   = env.String("NAME", "joe")
     age    = env.Int("AGE", 24)
@@ -20,7 +28,8 @@ var (
 func main() {
     env.ParseFlags()
 
-    fmt.Printf("%s is %d years old\n", name.Get(), age.Get())
+    fmt.Printf("%s is %d years old\nshifts are %v\n",
+        name.GetOrDefault(), age.GetOrDefault(), shifts.GetOrDefault())
 }
 ```
 

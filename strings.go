@@ -17,7 +17,7 @@ package env
 import (
 	"strings"
 
-	"github.com/simia-tech/env/internal/parser"
+	"github.com/simia-tech/env/v2/internal/parser"
 )
 
 const separator = ","

@@ -18,7 +18,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/simia-tech/env/internal/parser"
+	"github.com/simia-tech/env/v2/internal/parser"
 )
 
 // IntsField implements a ints field.

@@ -22,7 +22,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/simia-tech/env"
+	"github.com/simia-tech/env/v2"
 )
 
 func TestDuration(t *testing.T) {

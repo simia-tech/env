@@ -17,7 +17,7 @@ package env
 import (
 	"fmt"
 
-	"github.com/simia-tech/env/internal/parser"
+	"github.com/simia-tech/env/v2/internal/parser"
 )
 
 // StringMapField implements a map of strings.
