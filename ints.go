@@ -15,9 +15,10 @@
 package env
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/simia-tech/env/internal/parser"
 )
 
 // IntsField implements a ints field.
@@ -71,17 +72,9 @@ func (f *IntsField) Get() ([]int, error) {
 		return f.defaultValue, nil
 	}
 
-	parts := strings.Split(v, separator)
-	values := make([]int, len(parts))
-	for index, v := range parts {
-		if !f.options.isAllowedValue(v) {
-			return f.defaultValue, fmt.Errorf("field %s.%d with value [%s]: %w", f.name, index, v, ErrValueIsNotAllowed)
-		}
-		value, err := strconv.Atoi(v)
-		if err != nil {
-			return f.defaultValue, fmt.Errorf("field %s.%d parse int [%s]: %w", f.name, index, v, err)
-		}
-		values[index] = value
+	values, err := parser.ParseInts(v)
+	if err != nil {
+		return f.defaultValue, err
 	}
 	return values, nil
 }
