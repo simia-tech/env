@@ -5,15 +5,16 @@
 
 Implements a simple way of handling environment values. Each environment field is simply reflected by a
 variable inside the Go program. Out of the box handlers for the types `bool`, `[]byte`, `time.Duration`,
-`int`, `[]int`, `string` and `[]string` are provided. Other types can be added by using
+`int`, `[]int`, `string`, `[]string` and `map[string]string` are provided. Other types can be added by using
 the `RegisterField` function.
 
 ## Example
 
 ```go
 var (
-    name = env.String("NAME", "joe")
-    age  = env.Int("AGE", 24)
+    name   = env.String("NAME", "joe")
+    age    = env.Int("AGE", 24)
+    shifts = env.StringMap("SHIFTS", map[string]string{"monday": "9am - 5pm"})
 )
 
 func main() {
@@ -28,6 +29,7 @@ If the program is called with `-print-env`, all registered environment fields wo
 ```bash
 NAME="joe"
 AGE="24"
+SHIFTS="monday:\"9am - 5pm\""
 ```
 
 By using `-print-env -print-env-format long-bash`, a description for each field is generated.
@@ -38,6 +40,9 @@ NAME="joe"
 
 # Int field. The default value is '24'. Defined at .../main.go:10.
 AGE="24"
+
+# StringMap fields. The default value is 'monday:\"9am - 5pm\"'. Defined at .../main.go:9.
+SHIFTS="monday:\"9am - 5pm\""
 ```
 
 ## License
