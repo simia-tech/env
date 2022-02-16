@@ -38,7 +38,7 @@ var printer = map[string]func(io.Writer){
 
 func printShortBash(w io.Writer) {
 	for _, field := range fields {
-		fmt.Fprintf(w, "%s=\"%s\"\n", field.Name(), field.GetRawOrDefault())
+		fmt.Fprintf(w, "%s=%q\n", field.Name(), field.GetRawOrDefault())
 	}
 }
 
@@ -46,7 +46,7 @@ func printLongBash(w io.Writer) {
 	for _, field := range fields {
 		fmt.Fprintf(w, "\n")
 		fmt.Fprintf(w, "# %s\n", field.Description())
-		fmt.Fprintf(w, "%s=\"%s\"\n", field.Name(), field.GetRawOrDefault())
+		fmt.Fprintf(w, "%s=%q\n", field.Name(), field.GetRawOrDefault())
 	}
 }
 
@@ -58,7 +58,7 @@ func printShortDockerfile(w io.Writer) {
 		} else {
 			fmt.Fprintf(w, " \\\n    ")
 		}
-		fmt.Fprintf(w, "%s=\"%s\"", field.Name(), field.GetRawOrDefault())
+		fmt.Fprintf(w, "%s=%q", field.Name(), field.GetRawOrDefault())
 		index++
 	}
 	fmt.Fprintln(w)
@@ -68,6 +68,6 @@ func printLongDockerfile(w io.Writer) {
 	for _, field := range fields {
 		fmt.Fprintln(w)
 		fmt.Fprintf(w, "# %s\n", field.Description())
-		fmt.Fprintf(w, "ENV %s %s\n", field.Name(), field.GetRawOrDefault())
+		fmt.Fprintf(w, "ENV %s %q\n", field.Name(), field.GetRawOrDefault())
 	}
 }

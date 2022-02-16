@@ -28,6 +28,7 @@ func TestPrint(t *testing.T) {
 	env.ClearRegister()
 	env.Field("TEST_ONE", "default", env.Required(), env.AllowedValues("one", "two", "three"))
 	env.Field("TEST_TWO", "default")
+	// env.Field("TEST_THREE", map[string]int{"abc": 123})
 
 	testFn := func(format string, expectOutputPattern string) func(*testing.T) {
 		return func(t *testing.T) {
@@ -40,5 +41,5 @@ func TestPrint(t *testing.T) {
 	t.Run("ShortBash", testFn("short-bash", `^TEST_ONE="default"\nTEST_TWO="default"\n$`))
 	t.Run("LongBash", testFn("long-bash", `^\n# String field. Required field. Allowed values are 'one', 'two' and 'three'. The default value is 'default'. Defined at \S+print_test\.go:\d+\.\nTEST_ONE="default"\n\n# String field. The default value is 'default'. Defined at \S+print_test\.go:\d+\.\nTEST_TWO="default"\n$`))
 	t.Run("ShortDockerfile", testFn("short-dockerfile", `^ENV TEST_ONE="default" \\\n    TEST_TWO="default"\n$`))
-	t.Run("LongDockerfile", testFn("long-dockerfile", `^\n# String field. Required field. Allowed values are 'one', 'two' and 'three'. The default value is 'default'. Defined at \S+print_test\.go:\d+.\nENV TEST_ONE default\n\n# String field. The default value is 'default'. Defined at \S+print_test\.go:\d+.\nENV TEST_TWO default\n$`))
+	t.Run("LongDockerfile", testFn("long-dockerfile", `^\n# String field. Required field. Allowed values are 'one', 'two' and 'three'. The default value is 'default'. Defined at \S+print_test\.go:\d+.\nENV TEST_ONE "default"\n\n# String field. The default value is 'default'. Defined at \S+print_test\.go:\d+.\nENV TEST_TWO "default"\n$`))
 }
