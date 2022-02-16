@@ -17,6 +17,7 @@ package env_test
 import (
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -41,6 +42,15 @@ func TestField(t *testing.T) {
 		t.Run("DefaultValue", testUnsetFn(field, []byte{0, 1, 2, 3}, nil))
 		t.Run("RawDefaultValue", testRawUnsetFn(field, "00010203", nil))
 		t.Run("ParseError", testSetFn(field, "okaydokay", []byte{0, 1, 2, 3}, env.ErrInvalidValue))
+	})
+
+	t.Run("Duration", func(t *testing.T) {
+		field := env.Field("OPTIONAL_FIELD", 5*time.Second)
+
+		t.Run("Value", testSetFn(field, "10s", 10*time.Second, nil))
+		t.Run("DefaultValue", testUnsetFn(field, 5*time.Second, nil))
+		t.Run("RawDefaultValue", testRawUnsetFn(field, "5s", nil))
+		t.Run("ParseError", testSetFn(field, "okaydokay", 5*time.Second, env.ErrInvalidValue))
 	})
 
 	t.Run("Int", func(t *testing.T) {

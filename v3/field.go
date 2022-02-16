@@ -9,6 +9,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/simia-tech/env/v3/internal/parser"
 )
@@ -19,7 +20,7 @@ var (
 )
 
 type FieldType interface {
-	bool | []byte | int | string | []string | map[string]string
+	bool | []byte | time.Duration | int | string | []string | map[string]string
 }
 
 type FieldValue[T FieldType] struct {
@@ -109,6 +110,8 @@ func label[T FieldType]() string {
 		return "Boolean"
 	case []byte:
 		return "Bytes"
+	case time.Duration:
+		return "Duration"
 	case int:
 		return "Int"
 	case string:
@@ -141,6 +144,13 @@ func parseValue[T FieldType](raw string) (T, error) {
 		v, err := hex.DecodeString(raw)
 		if err != nil {
 			return value, fmt.Errorf("parse hex [%s]: %w", raw, ErrInvalidValue)
+		}
+		result = v
+
+	case time.Duration:
+		v, err := time.ParseDuration(raw)
+		if err != nil {
+			return value, fmt.Errorf("parse duration [%s]: %w", raw, ErrInvalidValue)
 		}
 		result = v
 
@@ -183,6 +193,9 @@ func formatValue[T FieldType](value T) string {
 
 	case []byte:
 		return hex.EncodeToString(t)
+
+	case time.Duration:
+		return t.String()
 
 	case int:
 		return strconv.FormatInt(int64(t), 10)
