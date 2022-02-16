@@ -1,6 +1,7 @@
 package env
 
 import (
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"os"
@@ -17,15 +18,11 @@ var (
 	ErrInvalidValue = errors.New("invalid value")
 )
 
-type FieldItemType interface {
-	string
+type FieldType interface {
+	bool | []byte | int | string | []string | map[string]string
 }
 
-type FieldType[K, V FieldItemType] interface {
-	bool | int | string | []K | map[K]V
-}
-
-type FieldValue[T FieldType[K, V], K, V FieldItemType] struct {
+type FieldValue[T FieldType] struct {
 	name         string
 	location     string
 	defaultValue T
@@ -34,13 +31,13 @@ type FieldValue[T FieldType[K, V], K, V FieldItemType] struct {
 
 var nameRegexp = regexp.MustCompile("^[A-Z0-9_]+$")
 
-func Field[T FieldType[K, V], K, V FieldItemType](name string, defaultValue T, opts ...Option) *FieldValue[T, K, V] {
+func Field[T FieldType](name string, defaultValue T, opts ...Option) *FieldValue[T] {
 	if !nameRegexp.MatchString(name) {
 		panic(fmt.Sprintf("field name [%s] must only contain capital letters, numbers or underscores", name))
 	}
 	_, filename, line, _ := runtime.Caller(1)
 
-	f := &FieldValue[T, K, V]{
+	f := &FieldValue[T]{
 		name:         name,
 		location:     fmt.Sprintf("%s:%d", filename, line),
 		defaultValue: defaultValue,
@@ -50,55 +47,55 @@ func Field[T FieldType[K, V], K, V FieldItemType](name string, defaultValue T, o
 	return f
 }
 
-func (f *FieldValue[T, K, V]) Name() string {
+func (f *FieldValue[T]) Name() string {
 	return f.name
 }
 
-func (f *FieldValue[T, K, V]) Description() string {
+func (f *FieldValue[T]) Description() string {
 	if f.options.description != "" {
 		return f.options.description
 	}
-	sentences := []string{label[T, K, V]() + " field."}
+	sentences := []string{label[T]() + " field."}
 	if f.options.required {
 		sentences = append(sentences, "Required field.")
 	}
 	if f.options.allowedValues != nil {
 		sentences = append(sentences, fmt.Sprintf("Allowed values are %s.", joinStringValues(f.options.allowedValues)))
 	}
-	sentences = append(sentences, "The default value is '"+formatValue[T, K, V](f.defaultValue)+"'.")
+	sentences = append(sentences, "The default value is '"+formatValue[T](f.defaultValue)+"'.")
 	sentences = append(sentences, "Defined at "+f.location+".")
 	return strings.Join(sentences, " ")
 }
 
-func (f *FieldValue[T, K, V]) GetRaw() (string, error) {
+func (f *FieldValue[T]) GetRaw() (string, error) {
 	text, ok := os.LookupEnv(f.name)
 	if !ok {
 		if f.options.required {
-			return formatValue[T, K, V](f.defaultValue), fmt.Errorf("field [%s]: %w", f.name, ErrMissingValue)
+			return formatValue[T](f.defaultValue), fmt.Errorf("field [%s]: %w", f.name, ErrMissingValue)
 		}
-		return formatValue[T, K, V](f.defaultValue), nil
+		return formatValue[T](f.defaultValue), nil
 	}
 	text = strings.TrimSpace(text)
 
 	if !f.options.isAllowedValue(text) {
-		return formatValue[T, K, V](f.defaultValue), fmt.Errorf("field [%s]: value [%s]: %w", f.name, text, ErrInvalidValue)
+		return formatValue[T](f.defaultValue), fmt.Errorf("field [%s]: value [%s]: %w", f.name, text, ErrInvalidValue)
 	}
 
 	return text, nil
 }
 
-func (f *FieldValue[T, K, V]) GetRawOrDefault() string {
+func (f *FieldValue[T]) GetRawOrDefault() string {
 	value, _ := f.GetRaw()
 	return value
 }
 
-func (f *FieldValue[T, K, V]) Get() (T, error) {
+func (f *FieldValue[T]) Get() (T, error) {
 	raw, err := f.GetRaw()
 	if err != nil {
 		return f.defaultValue, err
 	}
 
-	result, err := parseValue[T, K, V](raw)
+	result, err := parseValue[T](raw)
 	if err != nil {
 		return f.defaultValue, fmt.Errorf("field [%s]: %w", f.name, err)
 	}
@@ -106,24 +103,26 @@ func (f *FieldValue[T, K, V]) Get() (T, error) {
 	return result, nil
 }
 
-func label[T FieldType[K, V], K, V FieldItemType]() string {
+func label[T FieldType]() string {
 	switch any(*new(T)).(type) {
 	case bool:
 		return "Boolean"
+	case []byte:
+		return "Bytes"
 	case int:
 		return "Int"
 	case string:
 		return "String"
-	case []K:
-		return label[K, string, string]() + "Array"
-	case map[K]V:
-		return label[K, string, string]() + label[V, string, string]() + "Map"
+	case []string:
+		return "StringArray"
+	case map[string]string:
+		return "StringStringMap"
 	default:
 		return "Unknown"
 	}
 }
 
-func parseValue[T FieldType[K, V], K, V FieldItemType](raw string) (T, error) {
+func parseValue[T FieldType](raw string) (T, error) {
 	value := *new(T)
 
 	result := any(nil)
@@ -138,6 +137,13 @@ func parseValue[T FieldType[K, V], K, V FieldItemType](raw string) (T, error) {
 			return value, fmt.Errorf("parse bool [%s]: %w", raw, ErrInvalidValue)
 		}
 
+	case []byte:
+		v, err := hex.DecodeString(raw)
+		if err != nil {
+			return value, fmt.Errorf("parse hex [%s]: %w", raw, ErrInvalidValue)
+		}
+		result = v
+
 	case int:
 		v, err := strconv.ParseInt(raw, 10, 64)
 		if err != nil {
@@ -148,14 +154,14 @@ func parseValue[T FieldType[K, V], K, V FieldItemType](raw string) (T, error) {
 	case string:
 		result = raw
 
-	case []K:
+	case []string:
 		v, err := parser.ParseStrings(raw)
 		if err != nil {
 			return value, fmt.Errorf("parse string array [%s]: %w", raw, err)
 		}
 		result = v
 
-	case map[K]V:
+	case map[string]string:
 		m, err := parser.ParseStringMap(raw)
 		if err != nil {
 			return value, fmt.Errorf("parse string map [%s]: %w", raw, err)
@@ -167,7 +173,7 @@ func parseValue[T FieldType[K, V], K, V FieldItemType](raw string) (T, error) {
 	return result.(T), nil
 }
 
-func formatValue[T FieldType[K, V], K, V FieldItemType](value T) string {
+func formatValue[T FieldType](value T) string {
 	switch t := any(value).(type) {
 	case bool:
 		if t {
@@ -175,25 +181,20 @@ func formatValue[T FieldType[K, V], K, V FieldItemType](value T) string {
 		}
 		return "false"
 
+	case []byte:
+		return hex.EncodeToString(t)
+
 	case int:
 		return strconv.FormatInt(int64(t), 10)
 
 	case string:
 		return t
 
-	case []K:
-		parts := []string{}
-		for _, v := range t {
-			parts = append(parts, formatValue[K, string, string](v))
-		}
-		return strings.Join(parts, ",")
+	case []string:
+		return parser.FormatStrings(t)
 
-	case map[K]V:
-		m := map[string]string{}
-		for k, v := range t {
-			m[formatValue[K, string, string](k)] = formatValue[V, string, string](v)
-		}
-		return parser.FormatStringMap(m)
+	case map[string]string:
+		return parser.FormatStringMap(t)
 
 	default:
 		return ""

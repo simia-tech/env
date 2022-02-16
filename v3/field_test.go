@@ -30,13 +30,25 @@ func TestField(t *testing.T) {
 
 		t.Run("Value", testSetFn(field, "1", true, nil))
 		t.Run("DefaultValue", testUnsetFn(field, false, nil))
+		t.Run("RawDefaultValue", testRawUnsetFn(field, "false", nil))
 		t.Run("ParseError", testSetFn(field, "okaydokay", false, env.ErrInvalidValue))
+	})
+
+	t.Run("Bytes", func(t *testing.T) {
+		field := env.Field("OPTIONAL_FIELD", []byte{0, 1, 2, 3})
+
+		t.Run("Value", testSetFn(field, "ffeeddcc", []byte{0xff, 0xee, 0xdd, 0xcc}, nil))
+		t.Run("DefaultValue", testUnsetFn(field, []byte{0, 1, 2, 3}, nil))
+		t.Run("RawDefaultValue", testRawUnsetFn(field, "00010203", nil))
+		t.Run("ParseError", testSetFn(field, "okaydokay", []byte{0, 1, 2, 3}, env.ErrInvalidValue))
 	})
 
 	t.Run("Int", func(t *testing.T) {
 		field := env.Field("OPTIONAL_FIELD", 1)
 
 		t.Run("Value", testSetFn(field, "2", 2, nil))
+		t.Run("DefaultValue", testUnsetFn(field, 1, nil))
+		t.Run("RawDefaultValue", testRawUnsetFn(field, "1", nil))
 		t.Run("ParseError", testSetFn(field, "abc", 1, env.ErrInvalidValue))
 	})
 
@@ -47,6 +59,7 @@ func TestField(t *testing.T) {
 
 		t.Run("Value", testSetFn(optional, "def", "def", nil))
 		t.Run("DefaultValue", testUnsetFn(optional, "abc", nil))
+		t.Run("RawDefaultValue", testRawUnsetFn(optional, "abc", nil))
 		t.Run("RequiredAndSet", testSetFn(required, "def", "def", nil))
 		t.Run("RequiredUnset", testUnsetFn(required, "abc", env.ErrMissingValue))
 		t.Run("AllowedValue", testSetFn(allowed, "def", "def", nil))
@@ -58,6 +71,7 @@ func TestField(t *testing.T) {
 
 		t.Run("Value", testSetFn(field, "def", []string{"def"}, nil))
 		t.Run("DefaultValue", testUnsetFn(field, []string{"abc"}, nil))
+		t.Run("RawDefaultValue", testRawUnsetFn(field, `"abc"`, nil))
 	})
 
 	t.Run("StringStringMap", func(t *testing.T) {
@@ -65,43 +79,50 @@ func TestField(t *testing.T) {
 
 		t.Run("Value", testSetFn(field, "def:123", map[string]string{"def": "123"}, nil))
 		t.Run("DefaultValue", testUnsetFn(field, map[string]string{"abc": "123"}, nil))
+		t.Run("RawDefaultValue", testRawUnsetFn(field, `abc:"123"`, nil))
 	})
 }
 
-func testSetFn[
-	T env.FieldType[K, V], K, V env.FieldItemType,
-](
-	field *env.FieldValue[T, K, V], value string,
-	expectValue T, expectErr error,
-) func(*testing.T) {
+func testSetFn[T env.FieldType](field *env.FieldValue[T], value string, expectValue T, expectErr error) func(*testing.T) {
 	return func(t *testing.T) {
 		require.NoError(t, os.Setenv(field.Name(), value))
 		testFn(t, field, expectValue, expectErr)
 	}
 }
 
-func testUnsetFn[
-	T env.FieldType[K, V], K, V env.FieldItemType,
-](
-	field *env.FieldValue[T, K, V],
-	expectValue T, expectErr error,
-) func(*testing.T) {
+func testUnsetFn[T env.FieldType](field *env.FieldValue[T], expectValue T, expectErr error) func(*testing.T) {
 	return func(t *testing.T) {
 		require.NoError(t, os.Unsetenv(field.Name()))
 		testFn(t, field, expectValue, expectErr)
 	}
 }
 
-func testFn[
-	T env.FieldType[K, V], K, V env.FieldItemType,
-](
-	tb testing.TB,
-	field *env.FieldValue[T, K, V],
-	expectValue T, expectErr error,
-) {
+func testFn[T env.FieldType](tb testing.TB, field *env.FieldValue[T], expectValue T, expectErr error) {
 	value, err := field.Get()
 	if expectErr != nil {
 		assert.ErrorIs(tb, err, expectErr)
 	}
-	assert.Equal(tb, value, expectValue)
+	assert.Equal(tb, expectValue, value)
+}
+
+func testRawSetFn[T env.FieldType](field *env.FieldValue[T], value string, expectValue string, expectErr error) func(*testing.T) {
+	return func(t *testing.T) {
+		require.NoError(t, os.Setenv(field.Name(), value))
+		testRawFn(t, field, expectValue, expectErr)
+	}
+}
+
+func testRawUnsetFn[T env.FieldType](field *env.FieldValue[T], expectValue string, expectErr error) func(*testing.T) {
+	return func(t *testing.T) {
+		require.NoError(t, os.Unsetenv(field.Name()))
+		testRawFn(t, field, expectValue, expectErr)
+	}
+}
+
+func testRawFn[T env.FieldType](tb testing.TB, field *env.FieldValue[T], expectValue string, expectErr error) {
+	value, err := field.GetRaw()
+	if expectErr != nil {
+		assert.ErrorIs(tb, err, expectErr)
+	}
+	assert.Equal(tb, expectValue, value)
 }
