@@ -104,6 +104,11 @@ func (f *FieldValue[T]) Get() (T, error) {
 	return result, nil
 }
 
+func (f *FieldValue[T]) GetOrDefault() T {
+	value, _ := f.Get()
+	return value
+}
+
 func label[T FieldType]() string {
 	switch any(*new(T)).(type) {
 	case bool:
