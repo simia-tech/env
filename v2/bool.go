@@ -75,6 +75,8 @@ func (f *BoolField) Get() (bool, error) {
 	switch v {
 	case "1", trueValue, "yes":
 		return true, nil
+	case "":
+		return f.defaultValue, nil
 	default:
 		return false, nil
 	}
