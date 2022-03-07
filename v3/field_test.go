@@ -93,21 +93,21 @@ func TestField(t *testing.T) {
 	})
 }
 
-func testSetFn[T env.FieldType](field *env.FieldValue[T], value string, expectValue T, expectErr error) func(*testing.T) {
+func testSetFn[T env.FieldType](field *env.F[T], value string, expectValue T, expectErr error) func(*testing.T) {
 	return func(t *testing.T) {
 		require.NoError(t, os.Setenv(field.Name(), value))
 		testFn(t, field, expectValue, expectErr)
 	}
 }
 
-func testUnsetFn[T env.FieldType](field *env.FieldValue[T], expectValue T, expectErr error) func(*testing.T) {
+func testUnsetFn[T env.FieldType](field *env.F[T], expectValue T, expectErr error) func(*testing.T) {
 	return func(t *testing.T) {
 		require.NoError(t, os.Unsetenv(field.Name()))
 		testFn(t, field, expectValue, expectErr)
 	}
 }
 
-func testFn[T env.FieldType](tb testing.TB, field *env.FieldValue[T], expectValue T, expectErr error) {
+func testFn[T env.FieldType](tb testing.TB, field *env.F[T], expectValue T, expectErr error) {
 	value, err := field.Get()
 	if expectErr != nil {
 		assert.ErrorIs(tb, err, expectErr)
@@ -115,21 +115,21 @@ func testFn[T env.FieldType](tb testing.TB, field *env.FieldValue[T], expectValu
 	assert.Equal(tb, expectValue, value)
 }
 
-func testRawSetFn[T env.FieldType](field *env.FieldValue[T], value string, expectValue string, expectErr error) func(*testing.T) {
+func testRawSetFn[T env.FieldType](field *env.F[T], value string, expectValue string, expectErr error) func(*testing.T) {
 	return func(t *testing.T) {
 		require.NoError(t, os.Setenv(field.Name(), value))
 		testRawFn(t, field, expectValue, expectErr)
 	}
 }
 
-func testRawUnsetFn[T env.FieldType](field *env.FieldValue[T], expectValue string, expectErr error) func(*testing.T) {
+func testRawUnsetFn[T env.FieldType](field *env.F[T], expectValue string, expectErr error) func(*testing.T) {
 	return func(t *testing.T) {
 		require.NoError(t, os.Unsetenv(field.Name()))
 		testRawFn(t, field, expectValue, expectErr)
 	}
 }
 
-func testRawFn[T env.FieldType](tb testing.TB, field *env.FieldValue[T], expectValue string, expectErr error) {
+func testRawFn[T env.FieldType](tb testing.TB, field *env.F[T], expectValue string, expectErr error) {
 	value, err := field.GetRaw()
 	if expectErr != nil {
 		assert.ErrorIs(tb, err, expectErr)

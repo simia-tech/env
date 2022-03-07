@@ -23,7 +23,7 @@ type FieldType interface {
 	bool | []byte | time.Duration | int | string | []string | map[string]string
 }
 
-type FieldValue[T FieldType] struct {
+type F[T FieldType] struct {
 	name         string
 	location     string
 	defaultValue T
@@ -32,13 +32,13 @@ type FieldValue[T FieldType] struct {
 
 var nameRegexp = regexp.MustCompile("^[A-Z0-9_]+$")
 
-func Field[T FieldType](name string, defaultValue T, opts ...Option) *FieldValue[T] {
+func Field[T FieldType](name string, defaultValue T, opts ...Option) *F[T] {
 	if !nameRegexp.MatchString(name) {
 		panic(fmt.Sprintf("field name [%s] must only contain capital letters, numbers or underscores", name))
 	}
 	_, filename, line, _ := runtime.Caller(1)
 
-	f := &FieldValue[T]{
+	f := &F[T]{
 		name:         name,
 		location:     fmt.Sprintf("%s:%d", filename, line),
 		defaultValue: defaultValue,
@@ -48,11 +48,11 @@ func Field[T FieldType](name string, defaultValue T, opts ...Option) *FieldValue
 	return f
 }
 
-func (f *FieldValue[T]) Name() string {
+func (f *F[T]) Name() string {
 	return f.name
 }
 
-func (f *FieldValue[T]) Description() string {
+func (f *F[T]) Description() string {
 	if f.options.description != "" {
 		return f.options.description
 	}
@@ -68,7 +68,7 @@ func (f *FieldValue[T]) Description() string {
 	return strings.Join(sentences, " ")
 }
 
-func (f *FieldValue[T]) GetRaw() (string, error) {
+func (f *F[T]) GetRaw() (string, error) {
 	text, ok := os.LookupEnv(f.name)
 	if !ok {
 		if f.options.required {
@@ -85,12 +85,20 @@ func (f *FieldValue[T]) GetRaw() (string, error) {
 	return text, nil
 }
 
-func (f *FieldValue[T]) GetRawOrDefault() string {
+func (f *F[T]) GetRawOrDefault() string {
 	value, _ := f.GetRaw()
 	return value
 }
 
-func (f *FieldValue[T]) Get() (T, error) {
+func (f *F[T]) MustGetRaw() string {
+	value, err := f.GetRaw()
+	if err != nil {
+		panic(err)
+	}
+	return value
+}
+
+func (f *F[T]) Get() (T, error) {
 	raw, err := f.GetRaw()
 	if err != nil {
 		return f.defaultValue, err
@@ -104,8 +112,16 @@ func (f *FieldValue[T]) Get() (T, error) {
 	return result, nil
 }
 
-func (f *FieldValue[T]) GetOrDefault() T {
+func (f *F[T]) GetOrDefault() T {
 	value, _ := f.Get()
+	return value
+}
+
+func (f *F[T]) MustGet() T {
+	value, err := f.Get()
+	if err != nil {
+		panic(err)
+	}
 	return value
 }
 
