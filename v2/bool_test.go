@@ -26,7 +26,7 @@ import (
 
 func TestBool(t *testing.T) {
 	var (
-		optional = env.Bool("OPTIONAL_FIELD", false)
+		optional = env.Bool("OPTIONAL_FIELD", true)
 		required = env.Bool("REQUIRED_FIELD", false, env.Required())
 	)
 
@@ -45,7 +45,7 @@ func TestBool(t *testing.T) {
 	}
 
 	t.Run("Value", testFn(optional, "1", true, nil))
-	t.Run("DefaultValue", testFn(optional, "", false, nil))
+	t.Run("DefaultValue", testFn(optional, "", true, nil))
 	t.Run("RequiredAndSet", testFn(required, "yes", true, nil))
 	t.Run("RequiredNotSet", testFn(required, "", false, env.ErrRequiredValueIsMissing))
 	t.Run("UnallowedValue", testFn(optional, "okaydokay", false, env.ErrValueIsNotAllowed))
