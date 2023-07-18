@@ -62,6 +62,14 @@ func TestField(t *testing.T) {
 		t.Run("ParseError", testSetFn(field, "abc", 1, env.ErrInvalidValue))
 	})
 
+	t.Run("IntArray", func(t *testing.T) {
+		field := env.Field("OPTIONAL_FIELD", []int{1})
+
+		t.Run("Value", testSetFn(field, "2", []int{2}, nil))
+		t.Run("DefaultValue", testUnsetFn(field, []int{1}, nil))
+		t.Run("RawDefaultValue", testRawUnsetFn(field, "1", nil))
+	})
+
 	t.Run("String", func(t *testing.T) {
 		optional := env.Field("OPTIONAL_FIELD", "abc")
 		required := env.Field("REQUIRED_FIELD", "abc", env.Required())

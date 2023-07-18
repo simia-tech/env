@@ -20,7 +20,7 @@ var (
 )
 
 type FieldType interface {
-	bool | []byte | time.Duration | int | string | []string | map[string]string
+	bool | []byte | time.Duration | int | []int | string | []string | map[string]string
 }
 
 type F[T FieldType] struct {
@@ -135,6 +135,8 @@ func label[T FieldType]() string {
 		return "Duration"
 	case int:
 		return "Int"
+	case []int:
+		return "IntArray"
 	case string:
 		return "String"
 	case []string:
@@ -182,6 +184,13 @@ func parseValue[T FieldType](raw string) (T, error) {
 		}
 		result = int(v)
 
+	case []int:
+		v, err := parser.ParseInts(raw)
+		if err != nil {
+			return value, fmt.Errorf("parse int array [%s]: %w", raw, err)
+		}
+		result = v
+
 	case string:
 		result = raw
 
@@ -220,6 +229,9 @@ func formatValue[T FieldType](value T) string {
 
 	case int:
 		return strconv.FormatInt(int64(t), 10)
+
+	case []int:
+		return parser.FormatInts(t)
 
 	case string:
 		return t
